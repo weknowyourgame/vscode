@@ -1,0 +1,16 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { IUserDataSyncResourceProviderService, IUserDataSyncService, IUserDataSyncStoreManagementService } from '../../../../platform/userDataSync/common/userDataSync.js';
+import { registerSharedProcessRemoteService } from '../../../../platform/ipc/electron-browser/services.js';
+import { UserDataSyncServiceChannelClient } from '../../../../platform/userDataSync/common/userDataSyncServiceIpc.js';
+import { IUserDataSyncMachinesService } from '../../../../platform/userDataSync/common/userDataSyncMachines.js';
+import { UserDataSyncAccountServiceChannelClient, UserDataSyncStoreManagementServiceChannelClient } from '../../../../platform/userDataSync/common/userDataSyncIpc.js';
+import { IUserDataSyncAccountService } from '../../../../platform/userDataSync/common/userDataSyncAccount.js';
+registerSharedProcessRemoteService(IUserDataSyncService, 'userDataSync', { channelClientCtor: UserDataSyncServiceChannelClient });
+registerSharedProcessRemoteService(IUserDataSyncResourceProviderService, 'IUserDataSyncResourceProviderService');
+registerSharedProcessRemoteService(IUserDataSyncMachinesService, 'userDataSyncMachines');
+registerSharedProcessRemoteService(IUserDataSyncAccountService, 'userDataSyncAccount', { channelClientCtor: UserDataSyncAccountServiceChannelClient });
+registerSharedProcessRemoteService(IUserDataSyncStoreManagementService, 'userDataSyncStoreManagement', { channelClientCtor: UserDataSyncStoreManagementServiceChannelClient });
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidXNlckRhdGFTeW5jU2VydmljZS5qcyIsInNvdXJjZVJvb3QiOiJmaWxlOi8vL2hvbWUvZnJvc3R5L3ZzY29kZS9zcmMvIiwic291cmNlcyI6WyJ2cy93b3JrYmVuY2gvc2VydmljZXMvdXNlckRhdGFTeW5jL2VsZWN0cm9uLWJyb3dzZXIvdXNlckRhdGFTeW5jU2VydmljZS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRztBQUVoRyxPQUFPLEVBQUUsb0NBQW9DLEVBQUUsb0JBQW9CLEVBQUUsbUNBQW1DLEVBQUUsTUFBTSwwREFBMEQsQ0FBQztBQUMzSyxPQUFPLEVBQUUsa0NBQWtDLEVBQUUsTUFBTSx1REFBdUQsQ0FBQztBQUMzRyxPQUFPLEVBQUUsZ0NBQWdDLEVBQUUsTUFBTSxvRUFBb0UsQ0FBQztBQUN0SCxPQUFPLEVBQUUsNEJBQTRCLEVBQUUsTUFBTSxrRUFBa0UsQ0FBQztBQUNoSCxPQUFPLEVBQUUsdUNBQXVDLEVBQUUsK0NBQStDLEVBQUUsTUFBTSw2REFBNkQsQ0FBQztBQUN2SyxPQUFPLEVBQUUsMkJBQTJCLEVBQUUsTUFBTSxpRUFBaUUsQ0FBQztBQUU5RyxrQ0FBa0MsQ0FBQyxvQkFBb0IsRUFBRSxjQUFjLEVBQUUsRUFBRSxpQkFBaUIsRUFBRSxnQ0FBZ0MsRUFBRSxDQUFDLENBQUM7QUFDbEksa0NBQWtDLENBQUMsb0NBQW9DLEVBQUUsc0NBQXNDLENBQUMsQ0FBQztBQUNqSCxrQ0FBa0MsQ0FBQyw0QkFBNEIsRUFBRSxzQkFBc0IsQ0FBQyxDQUFDO0FBQ3pGLGtDQUFrQyxDQUFDLDJCQUEyQixFQUFFLHFCQUFxQixFQUFFLEVBQUUsaUJBQWlCLEVBQUUsdUNBQXVDLEVBQUUsQ0FBQyxDQUFDO0FBQ3ZKLGtDQUFrQyxDQUFDLG1DQUFtQyxFQUFFLDZCQUE2QixFQUFFLEVBQUUsaUJBQWlCLEVBQUUsK0NBQStDLEVBQUUsQ0FBQyxDQUFDIn0=

@@ -1,0 +1,1 @@
+{"version":3,"sources":["util/dom.ts"],"names":[],"mappings":";;AAMA,0CAEC;AAFD,SAAgB,eAAe,CAAC,KAA0B;IACzD,OAAO,KAAK,CAAC,QAAQ,EAAE,CAAC,OAAO,CAAC,IAAI,EAAE,QAAQ,CAAC,CAAC;AACjD,CAAC","file":"dom.js","sourceRoot":"../../src/"}

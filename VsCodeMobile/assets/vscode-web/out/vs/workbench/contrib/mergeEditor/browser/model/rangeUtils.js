@@ -1,0 +1,48 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { Position } from '../../../../../editor/common/core/position.js';
+import { TextLength } from '../../../../../editor/common/core/text/textLength.js';
+export function rangeContainsPosition(range, position) {
+    if (position.lineNumber < range.startLineNumber || position.lineNumber > range.endLineNumber) {
+        return false;
+    }
+    if (position.lineNumber === range.startLineNumber && position.column < range.startColumn) {
+        return false;
+    }
+    if (position.lineNumber === range.endLineNumber && position.column >= range.endColumn) {
+        return false;
+    }
+    return true;
+}
+export function lengthOfRange(range) {
+    if (range.startLineNumber === range.endLineNumber) {
+        return new TextLength(0, range.endColumn - range.startColumn);
+    }
+    else {
+        return new TextLength(range.endLineNumber - range.startLineNumber, range.endColumn - 1);
+    }
+}
+export function lengthBetweenPositions(position1, position2) {
+    if (position1.lineNumber === position2.lineNumber) {
+        return new TextLength(0, position2.column - position1.column);
+    }
+    else {
+        return new TextLength(position2.lineNumber - position1.lineNumber, position2.column - 1);
+    }
+}
+export function addLength(position, length) {
+    if (length.lineCount === 0) {
+        return new Position(position.lineNumber, position.column + length.columnCount);
+    }
+    else {
+        return new Position(position.lineNumber + length.lineCount, length.columnCount + 1);
+    }
+}
+export function rangeIsBeforeOrTouching(range, other) {
+    return (range.endLineNumber < other.startLineNumber ||
+        (range.endLineNumber === other.startLineNumber &&
+            range.endColumn <= other.startColumn));
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicmFuZ2VVdGlscy5qcyIsInNvdXJjZVJvb3QiOiJmaWxlOi8vL2hvbWUvZnJvc3R5L3ZzY29kZS9zcmMvIiwic291cmNlcyI6WyJ2cy93b3JrYmVuY2gvY29udHJpYi9tZXJnZUVkaXRvci9icm93c2VyL21vZGVsL3JhbmdlVXRpbHMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7OztnR0FHZ0c7QUFFaEcsT0FBTyxFQUFFLFFBQVEsRUFBRSxNQUFNLCtDQUErQyxDQUFDO0FBRXpFLE9BQU8sRUFBRSxVQUFVLEVBQUUsTUFBTSxzREFBc0QsQ0FBQztBQUVsRixNQUFNLFVBQVUscUJBQXFCLENBQUMsS0FBWSxFQUFFLFFBQWtCO0lBQ3JFLElBQUksUUFBUSxDQUFDLFVBQVUsR0FBRyxLQUFLLENBQUMsZUFBZSxJQUFJLFFBQVEsQ0FBQyxVQUFVLEdBQUcsS0FBSyxDQUFDLGFBQWEsRUFBRSxDQUFDO1FBQzlGLE9BQU8sS0FBSyxDQUFDO0lBQ2QsQ0FBQztJQUNELElBQUksUUFBUSxDQUFDLFVBQVUsS0FBSyxLQUFLLENBQUMsZUFBZSxJQUFJLFFBQVEsQ0FBQyxNQUFNLEdBQUcsS0FBSyxDQUFDLFdBQVcsRUFBRSxDQUFDO1FBQzFGLE9BQU8sS0FBSyxDQUFDO0lBQ2QsQ0FBQztJQUNELElBQUksUUFBUSxDQUFDLFVBQVUsS0FBSyxLQUFLLENBQUMsYUFBYSxJQUFJLFFBQVEsQ0FBQyxNQUFNLElBQUksS0FBSyxDQUFDLFNBQVMsRUFBRSxDQUFDO1FBQ3ZGLE9BQU8sS0FBSyxDQUFDO0lBQ2QsQ0FBQztJQUNELE9BQU8sSUFBSSxDQUFDO0FBQ2IsQ0FBQztBQUVELE1BQU0sVUFBVSxhQUFhLENBQUMsS0FBWTtJQUN6QyxJQUFJLEtBQUssQ0FBQyxlQUFlLEtBQUssS0FBSyxDQUFDLGFBQWEsRUFBRSxDQUFDO1FBQ25ELE9BQU8sSUFBSSxVQUFVLENBQUMsQ0FBQyxFQUFFLEtBQUssQ0FBQyxTQUFTLEdBQUcsS0FBSyxDQUFDLFdBQVcsQ0FBQyxDQUFDO0lBQy9ELENBQUM7U0FBTSxDQUFDO1FBQ1AsT0FBTyxJQUFJLFVBQVUsQ0FBQyxLQUFLLENBQUMsYUFBYSxHQUFHLEtBQUssQ0FBQyxlQUFlLEVBQUUsS0FBSyxDQUFDLFNBQVMsR0FBRyxDQUFDLENBQUMsQ0FBQztJQUN6RixDQUFDO0FBQ0YsQ0FBQztBQUVELE1BQU0sVUFBVSxzQkFBc0IsQ0FBQyxTQUFtQixFQUFFLFNBQW1CO0lBQzlFLElBQUksU0FBUyxDQUFDLFVBQVUsS0FBSyxTQUFTLENBQUMsVUFBVSxFQUFFLENBQUM7UUFDbkQsT0FBTyxJQUFJLFVBQVUsQ0FBQyxDQUFDLEVBQUUsU0FBUyxDQUFDLE1BQU0sR0FBRyxTQUFTLENBQUMsTUFBTSxDQUFDLENBQUM7SUFDL0QsQ0FBQztTQUFNLENBQUM7UUFDUCxPQUFPLElBQUksVUFBVSxDQUFDLFNBQVMsQ0FBQyxVQUFVLEdBQUcsU0FBUyxDQUFDLFVBQVUsRUFBRSxTQUFTLENBQUMsTUFBTSxHQUFHLENBQUMsQ0FBQyxDQUFDO0lBQzFGLENBQUM7QUFDRixDQUFDO0FBRUQsTUFBTSxVQUFVLFNBQVMsQ0FBQyxRQUFrQixFQUFFLE1BQWtCO0lBQy9ELElBQUksTUFBTSxDQUFDLFNBQVMsS0FBSyxDQUFDLEVBQUUsQ0FBQztRQUM1QixPQUFPLElBQUksUUFBUSxDQUFDLFFBQVEsQ0FBQyxVQUFVLEVBQUUsUUFBUSxDQUFDLE1BQU0sR0FBRyxNQUFNLENBQUMsV0FBVyxDQUFDLENBQUM7SUFDaEYsQ0FBQztTQUFNLENBQUM7UUFDUCxPQUFPLElBQUksUUFBUSxDQUFDLFFBQVEsQ0FBQyxVQUFVLEdBQUcsTUFBTSxDQUFDLFNBQVMsRUFBRSxNQUFNLENBQUMsV0FBVyxHQUFHLENBQUMsQ0FBQyxDQUFDO0lBQ3JGLENBQUM7QUFDRixDQUFDO0FBRUQsTUFBTSxVQUFVLHVCQUF1QixDQUFDLEtBQVksRUFBRSxLQUFZO0lBQ2pFLE9BQU8sQ0FDTixLQUFLLENBQUMsYUFBYSxHQUFHLEtBQUssQ0FBQyxlQUFlO1FBQzNDLENBQUMsS0FBSyxDQUFDLGFBQWEsS0FBSyxLQUFLLENBQUMsZUFBZTtZQUM3QyxLQUFLLENBQUMsU0FBUyxJQUFJLEtBQUssQ0FBQyxXQUFXLENBQUMsQ0FDdEMsQ0FBQztBQUNILENBQUMifQ==

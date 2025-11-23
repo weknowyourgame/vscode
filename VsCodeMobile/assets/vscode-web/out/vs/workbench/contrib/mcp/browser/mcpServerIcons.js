@@ -1,0 +1,13 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { Codicon } from '../../../../base/common/codicons.js';
+import { localize } from '../../../../nls.js';
+import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
+export const mcpServerIcon = registerIcon('mcp-server', Codicon.mcp, localize('mcpServer', 'Icon used for the MCP server.'));
+export const mcpServerRemoteIcon = registerIcon('mcp-server-remote', Codicon.remote, localize('mcpServerRemoteIcon', 'Icon to indicate that an MCP server is for the remote user scope.'));
+export const mcpServerWorkspaceIcon = registerIcon('mcp-server-workspace', Codicon.rootFolder, localize('mcpServerWorkspaceIcon', 'Icon to indicate that an MCP server is for the workspace scope.'));
+export const mcpStarredIcon = registerIcon('mcp-server-starred', Codicon.starFull, localize('starredIcon', 'Icon shown along with the starred status.'));
+export const mcpLicenseIcon = registerIcon('mcp-server-license', Codicon.law, localize('licenseIcon', 'Icon shown along with the license status.'));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibWNwU2VydmVySWNvbnMuanMiLCJzb3VyY2VSb290IjoiZmlsZTovLy9ob21lL2Zyb3N0eS92c2NvZGUvc3JjLyIsInNvdXJjZXMiOlsidnMvd29ya2JlbmNoL2NvbnRyaWIvbWNwL2Jyb3dzZXIvbWNwU2VydmVySWNvbnMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7OztnR0FHZ0c7QUFFaEcsT0FBTyxFQUFFLE9BQU8sRUFBRSxNQUFNLHFDQUFxQyxDQUFDO0FBQzlELE9BQU8sRUFBRSxRQUFRLEVBQUUsTUFBTSxvQkFBb0IsQ0FBQztBQUM5QyxPQUFPLEVBQUUsWUFBWSxFQUFFLE1BQU0sbURBQW1ELENBQUM7QUFFakYsTUFBTSxDQUFDLE1BQU0sYUFBYSxHQUFHLFlBQVksQ0FBQyxZQUFZLEVBQUUsT0FBTyxDQUFDLEdBQUcsRUFBRSxRQUFRLENBQUMsV0FBVyxFQUFFLCtCQUErQixDQUFDLENBQUMsQ0FBQztBQUM3SCxNQUFNLENBQUMsTUFBTSxtQkFBbUIsR0FBRyxZQUFZLENBQUMsbUJBQW1CLEVBQUUsT0FBTyxDQUFDLE1BQU0sRUFBRSxRQUFRLENBQUMscUJBQXFCLEVBQUUsbUVBQW1FLENBQUMsQ0FBQyxDQUFDO0FBQzNMLE1BQU0sQ0FBQyxNQUFNLHNCQUFzQixHQUFHLFlBQVksQ0FBQyxzQkFBc0IsRUFBRSxPQUFPLENBQUMsVUFBVSxFQUFFLFFBQVEsQ0FBQyx3QkFBd0IsRUFBRSxpRUFBaUUsQ0FBQyxDQUFDLENBQUM7QUFDdE0sTUFBTSxDQUFDLE1BQU0sY0FBYyxHQUFHLFlBQVksQ0FBQyxvQkFBb0IsRUFBRSxPQUFPLENBQUMsUUFBUSxFQUFFLFFBQVEsQ0FBQyxhQUFhLEVBQUUsMkNBQTJDLENBQUMsQ0FBQyxDQUFDO0FBQ3pKLE1BQU0sQ0FBQyxNQUFNLGNBQWMsR0FBRyxZQUFZLENBQUMsb0JBQW9CLEVBQUUsT0FBTyxDQUFDLEdBQUcsRUFBRSxRQUFRLENBQUMsYUFBYSxFQUFFLDJDQUEyQyxDQUFDLENBQUMsQ0FBQyJ9

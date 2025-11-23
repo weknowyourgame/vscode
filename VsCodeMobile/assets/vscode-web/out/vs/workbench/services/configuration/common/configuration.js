@@ -1,0 +1,39 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
+import { refineServiceDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+export const FOLDER_CONFIG_FOLDER_NAME = '.vscode';
+export const FOLDER_SETTINGS_NAME = 'settings';
+export const FOLDER_SETTINGS_PATH = `${FOLDER_CONFIG_FOLDER_NAME}/${FOLDER_SETTINGS_NAME}.json`;
+export const defaultSettingsSchemaId = 'vscode://schemas/settings/default';
+export const userSettingsSchemaId = 'vscode://schemas/settings/user';
+export const profileSettingsSchemaId = 'vscode://schemas/settings/profile';
+export const machineSettingsSchemaId = 'vscode://schemas/settings/machine';
+export const workspaceSettingsSchemaId = 'vscode://schemas/settings/workspace';
+export const folderSettingsSchemaId = 'vscode://schemas/settings/folder';
+export const launchSchemaId = 'vscode://schemas/launch';
+export const tasksSchemaId = 'vscode://schemas/tasks';
+export const mcpSchemaId = 'vscode://schemas/mcp';
+export const APPLICATION_SCOPES = [1 /* ConfigurationScope.APPLICATION */, 3 /* ConfigurationScope.APPLICATION_MACHINE */];
+export const PROFILE_SCOPES = [2 /* ConfigurationScope.MACHINE */, 4 /* ConfigurationScope.WINDOW */, 5 /* ConfigurationScope.RESOURCE */, 6 /* ConfigurationScope.LANGUAGE_OVERRIDABLE */, 7 /* ConfigurationScope.MACHINE_OVERRIDABLE */];
+export const LOCAL_MACHINE_PROFILE_SCOPES = [4 /* ConfigurationScope.WINDOW */, 5 /* ConfigurationScope.RESOURCE */, 6 /* ConfigurationScope.LANGUAGE_OVERRIDABLE */];
+export const LOCAL_MACHINE_SCOPES = [1 /* ConfigurationScope.APPLICATION */, ...LOCAL_MACHINE_PROFILE_SCOPES];
+export const REMOTE_MACHINE_SCOPES = [2 /* ConfigurationScope.MACHINE */, 3 /* ConfigurationScope.APPLICATION_MACHINE */, 4 /* ConfigurationScope.WINDOW */, 5 /* ConfigurationScope.RESOURCE */, 6 /* ConfigurationScope.LANGUAGE_OVERRIDABLE */, 7 /* ConfigurationScope.MACHINE_OVERRIDABLE */];
+export const WORKSPACE_SCOPES = [4 /* ConfigurationScope.WINDOW */, 5 /* ConfigurationScope.RESOURCE */, 6 /* ConfigurationScope.LANGUAGE_OVERRIDABLE */, 7 /* ConfigurationScope.MACHINE_OVERRIDABLE */];
+export const FOLDER_SCOPES = [5 /* ConfigurationScope.RESOURCE */, 6 /* ConfigurationScope.LANGUAGE_OVERRIDABLE */, 7 /* ConfigurationScope.MACHINE_OVERRIDABLE */];
+export const TASKS_CONFIGURATION_KEY = 'tasks';
+export const LAUNCH_CONFIGURATION_KEY = 'launch';
+export const MCP_CONFIGURATION_KEY = 'mcp';
+export const WORKSPACE_STANDALONE_CONFIGURATIONS = Object.create(null);
+WORKSPACE_STANDALONE_CONFIGURATIONS[TASKS_CONFIGURATION_KEY] = `${FOLDER_CONFIG_FOLDER_NAME}/${TASKS_CONFIGURATION_KEY}.json`;
+WORKSPACE_STANDALONE_CONFIGURATIONS[LAUNCH_CONFIGURATION_KEY] = `${FOLDER_CONFIG_FOLDER_NAME}/${LAUNCH_CONFIGURATION_KEY}.json`;
+WORKSPACE_STANDALONE_CONFIGURATIONS[MCP_CONFIGURATION_KEY] = `${FOLDER_CONFIG_FOLDER_NAME}/${MCP_CONFIGURATION_KEY}.json`;
+export const USER_STANDALONE_CONFIGURATIONS = Object.create(null);
+USER_STANDALONE_CONFIGURATIONS[TASKS_CONFIGURATION_KEY] = `${TASKS_CONFIGURATION_KEY}.json`;
+USER_STANDALONE_CONFIGURATIONS[MCP_CONFIGURATION_KEY] = `${MCP_CONFIGURATION_KEY}.json`;
+export const IWorkbenchConfigurationService = refineServiceDecorator(IConfigurationService);
+export const TASKS_DEFAULT = '{\n\t\"version\": \"2.0.0\",\n\t\"tasks\": []\n}';
+export const APPLY_ALL_PROFILES_SETTING = 'workbench.settings.applyToAllProfiles';
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29uZmlndXJhdGlvbi5qcyIsInNvdXJjZVJvb3QiOiJmaWxlOi8vL2hvbWUvZnJvc3R5L3ZzY29kZS9zcmMvIiwic291cmNlcyI6WyJ2cy93b3JrYmVuY2gvc2VydmljZXMvY29uZmlndXJhdGlvbi9jb21tb24vY29uZmlndXJhdGlvbi50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRztBQUloRyxPQUFPLEVBQUUscUJBQXFCLEVBQUUsTUFBTSw0REFBNEQsQ0FBQztBQUNuRyxPQUFPLEVBQUUsc0JBQXNCLEVBQUUsTUFBTSw0REFBNEQsQ0FBQztBQUtwRyxNQUFNLENBQUMsTUFBTSx5QkFBeUIsR0FBRyxTQUFTLENBQUM7QUFDbkQsTUFBTSxDQUFDLE1BQU0sb0JBQW9CLEdBQUcsVUFBVSxDQUFDO0FBQy9DLE1BQU0sQ0FBQyxNQUFNLG9CQUFvQixHQUFHLEdBQUcseUJBQXlCLElBQUksb0JBQW9CLE9BQU8sQ0FBQztBQUVoRyxNQUFNLENBQUMsTUFBTSx1QkFBdUIsR0FBRyxtQ0FBbUMsQ0FBQztBQUMzRSxNQUFNLENBQUMsTUFBTSxvQkFBb0IsR0FBRyxnQ0FBZ0MsQ0FBQztBQUNyRSxNQUFNLENBQUMsTUFBTSx1QkFBdUIsR0FBRyxtQ0FBbUMsQ0FBQztBQUMzRSxNQUFNLENBQUMsTUFBTSx1QkFBdUIsR0FBRyxtQ0FBbUMsQ0FBQztBQUMzRSxNQUFNLENBQUMsTUFBTSx5QkFBeUIsR0FBRyxxQ0FBcUMsQ0FBQztBQUMvRSxNQUFNLENBQUMsTUFBTSxzQkFBc0IsR0FBRyxrQ0FBa0MsQ0FBQztBQUN6RSxNQUFNLENBQUMsTUFBTSxjQUFjLEdBQUcseUJBQXlCLENBQUM7QUFDeEQsTUFBTSxDQUFDLE1BQU0sYUFBYSxHQUFHLHdCQUF3QixDQUFDO0FBQ3RELE1BQU0sQ0FBQyxNQUFNLFdBQVcsR0FBRyxzQkFBc0IsQ0FBQztBQUVsRCxNQUFNLENBQUMsTUFBTSxrQkFBa0IsR0FBRyx3RkFBd0UsQ0FBQztBQUMzRyxNQUFNLENBQUMsTUFBTSxjQUFjLEdBQUcsNk1BQXFLLENBQUM7QUFDcE0sTUFBTSxDQUFDLE1BQU0sNEJBQTRCLEdBQUcseUhBQWlHLENBQUM7QUFDOUksTUFBTSxDQUFDLE1BQU0sb0JBQW9CLEdBQUcseUNBQWlDLEdBQUcsNEJBQTRCLENBQUMsQ0FBQztBQUN0RyxNQUFNLENBQUMsTUFBTSxxQkFBcUIsR0FBRyw2UEFBNk0sQ0FBQztBQUNuUCxNQUFNLENBQUMsTUFBTSxnQkFBZ0IsR0FBRyx5S0FBeUksQ0FBQztBQUMxSyxNQUFNLENBQUMsTUFBTSxhQUFhLEdBQUcsc0lBQThHLENBQUM7QUFFNUksTUFBTSxDQUFDLE1BQU0sdUJBQXVCLEdBQUcsT0FBTyxDQUFDO0FBQy9DLE1BQU0sQ0FBQyxNQUFNLHdCQUF3QixHQUFHLFFBQVEsQ0FBQztBQUNqRCxNQUFNLENBQUMsTUFBTSxxQkFBcUIsR0FBRyxLQUFLLENBQUM7QUFFM0MsTUFBTSxDQUFDLE1BQU0sbUNBQW1DLEdBQUcsTUFBTSxDQUFDLE1BQU0sQ0FBQyxJQUFJLENBQUMsQ0FBQztBQUN2RSxtQ0FBbUMsQ0FBQyx1QkFBdUIsQ0FBQyxHQUFHLEdBQUcseUJBQXlCLElBQUksdUJBQXVCLE9BQU8sQ0FBQztBQUM5SCxtQ0FBbUMsQ0FBQyx3QkFBd0IsQ0FBQyxHQUFHLEdBQUcseUJBQXlCLElBQUksd0JBQXdCLE9BQU8sQ0FBQztBQUNoSSxtQ0FBbUMsQ0FBQyxxQkFBcUIsQ0FBQyxHQUFHLEdBQUcseUJBQXlCLElBQUkscUJBQXFCLE9BQU8sQ0FBQztBQUMxSCxNQUFNLENBQUMsTUFBTSw4QkFBOEIsR0FBRyxNQUFNLENBQUMsTUFBTSxDQUFDLElBQUksQ0FBQyxDQUFDO0FBQ2xFLDhCQUE4QixDQUFDLHVCQUF1QixDQUFDLEdBQUcsR0FBRyx1QkFBdUIsT0FBTyxDQUFDO0FBQzVGLDhCQUE4QixDQUFDLHFCQUFxQixDQUFDLEdBQUcsR0FBRyxxQkFBcUIsT0FBTyxDQUFDO0FBc0J4RixNQUFNLENBQUMsTUFBTSw4QkFBOEIsR0FBRyxzQkFBc0IsQ0FBd0QscUJBQXFCLENBQUMsQ0FBQztBQStCbkosTUFBTSxDQUFDLE1BQU0sYUFBYSxHQUFHLGtEQUFrRCxDQUFDO0FBRWhGLE1BQU0sQ0FBQyxNQUFNLDBCQUEwQixHQUFHLHVDQUF1QyxDQUFDIn0=

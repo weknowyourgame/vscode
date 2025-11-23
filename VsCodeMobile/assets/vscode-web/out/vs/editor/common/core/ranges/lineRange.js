@@ -1,0 +1,351 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { BugIndicatingError } from '../../../../base/common/errors.js';
+import { OffsetRange } from './offsetRange.js';
+import { Range } from '../range.js';
+import { findFirstIdxMonotonousOrArrLen, findLastIdxMonotonous, findLastMonotonous } from '../../../../base/common/arraysFind.js';
+import { compareBy, numberComparator } from '../../../../base/common/arrays.js';
+/**
+ * A range of lines (1-based).
+ */
+export class LineRange {
+    static ofLength(startLineNumber, length) {
+        return new LineRange(startLineNumber, startLineNumber + length);
+    }
+    static fromRange(range) {
+        return new LineRange(range.startLineNumber, range.endLineNumber);
+    }
+    static fromRangeInclusive(range) {
+        return new LineRange(range.startLineNumber, range.endLineNumber + 1);
+    }
+    static { this.compareByStart = compareBy(l => l.startLineNumber, numberComparator); }
+    static subtract(a, b) {
+        if (!b) {
+            return [a];
+        }
+        if (a.startLineNumber < b.startLineNumber && b.endLineNumberExclusive < a.endLineNumberExclusive) {
+            return [
+                new LineRange(a.startLineNumber, b.startLineNumber),
+                new LineRange(b.endLineNumberExclusive, a.endLineNumberExclusive)
+            ];
+        }
+        else if (b.startLineNumber <= a.startLineNumber && a.endLineNumberExclusive <= b.endLineNumberExclusive) {
+            return [];
+        }
+        else if (b.endLineNumberExclusive < a.endLineNumberExclusive) {
+            return [new LineRange(Math.max(b.endLineNumberExclusive, a.startLineNumber), a.endLineNumberExclusive)];
+        }
+        else {
+            return [new LineRange(a.startLineNumber, Math.min(b.startLineNumber, a.endLineNumberExclusive))];
+        }
+    }
+    /**
+     * @param lineRanges An array of arrays of of sorted line ranges.
+     */
+    static joinMany(lineRanges) {
+        if (lineRanges.length === 0) {
+            return [];
+        }
+        let result = new LineRangeSet(lineRanges[0].slice());
+        for (let i = 1; i < lineRanges.length; i++) {
+            result = result.getUnion(new LineRangeSet(lineRanges[i].slice()));
+        }
+        return result.ranges;
+    }
+    static join(lineRanges) {
+        if (lineRanges.length === 0) {
+            throw new BugIndicatingError('lineRanges cannot be empty');
+        }
+        let startLineNumber = lineRanges[0].startLineNumber;
+        let endLineNumberExclusive = lineRanges[0].endLineNumberExclusive;
+        for (let i = 1; i < lineRanges.length; i++) {
+            startLineNumber = Math.min(startLineNumber, lineRanges[i].startLineNumber);
+            endLineNumberExclusive = Math.max(endLineNumberExclusive, lineRanges[i].endLineNumberExclusive);
+        }
+        return new LineRange(startLineNumber, endLineNumberExclusive);
+    }
+    /**
+     * @internal
+     */
+    static deserialize(lineRange) {
+        return new LineRange(lineRange[0], lineRange[1]);
+    }
+    constructor(startLineNumber, endLineNumberExclusive) {
+        if (startLineNumber > endLineNumberExclusive) {
+            throw new BugIndicatingError(`startLineNumber ${startLineNumber} cannot be after endLineNumberExclusive ${endLineNumberExclusive}`);
+        }
+        this.startLineNumber = startLineNumber;
+        this.endLineNumberExclusive = endLineNumberExclusive;
+    }
+    /**
+     * Indicates if this line range contains the given line number.
+     */
+    contains(lineNumber) {
+        return this.startLineNumber <= lineNumber && lineNumber < this.endLineNumberExclusive;
+    }
+    containsRange(range) {
+        return this.startLineNumber <= range.startLineNumber && range.endLineNumberExclusive <= this.endLineNumberExclusive;
+    }
+    /**
+     * Indicates if this line range is empty.
+     */
+    get isEmpty() {
+        return this.startLineNumber === this.endLineNumberExclusive;
+    }
+    /**
+     * Moves this line range by the given offset of line numbers.
+     */
+    delta(offset) {
+        return new LineRange(this.startLineNumber + offset, this.endLineNumberExclusive + offset);
+    }
+    deltaLength(offset) {
+        return new LineRange(this.startLineNumber, this.endLineNumberExclusive + offset);
+    }
+    /**
+     * The number of lines this line range spans.
+     */
+    get length() {
+        return this.endLineNumberExclusive - this.startLineNumber;
+    }
+    /**
+     * Creates a line range that combines this and the given line range.
+     */
+    join(other) {
+        return new LineRange(Math.min(this.startLineNumber, other.startLineNumber), Math.max(this.endLineNumberExclusive, other.endLineNumberExclusive));
+    }
+    toString() {
+        return `[${this.startLineNumber},${this.endLineNumberExclusive})`;
+    }
+    /**
+     * The resulting range is empty if the ranges do not intersect, but touch.
+     * If the ranges don't even touch, the result is undefined.
+     */
+    intersect(other) {
+        const startLineNumber = Math.max(this.startLineNumber, other.startLineNumber);
+        const endLineNumberExclusive = Math.min(this.endLineNumberExclusive, other.endLineNumberExclusive);
+        if (startLineNumber <= endLineNumberExclusive) {
+            return new LineRange(startLineNumber, endLineNumberExclusive);
+        }
+        return undefined;
+    }
+    intersectsStrict(other) {
+        return this.startLineNumber < other.endLineNumberExclusive && other.startLineNumber < this.endLineNumberExclusive;
+    }
+    intersectsOrTouches(other) {
+        return this.startLineNumber <= other.endLineNumberExclusive && other.startLineNumber <= this.endLineNumberExclusive;
+    }
+    equals(b) {
+        return this.startLineNumber === b.startLineNumber && this.endLineNumberExclusive === b.endLineNumberExclusive;
+    }
+    toInclusiveRange() {
+        if (this.isEmpty) {
+            return null;
+        }
+        return new Range(this.startLineNumber, 1, this.endLineNumberExclusive - 1, Number.MAX_SAFE_INTEGER);
+    }
+    /**
+     * @deprecated Using this function is discouraged because it might lead to bugs: The end position is not guaranteed to be a valid position!
+    */
+    toExclusiveRange() {
+        return new Range(this.startLineNumber, 1, this.endLineNumberExclusive, 1);
+    }
+    mapToLineArray(f) {
+        const result = [];
+        for (let lineNumber = this.startLineNumber; lineNumber < this.endLineNumberExclusive; lineNumber++) {
+            result.push(f(lineNumber));
+        }
+        return result;
+    }
+    forEach(f) {
+        for (let lineNumber = this.startLineNumber; lineNumber < this.endLineNumberExclusive; lineNumber++) {
+            f(lineNumber);
+        }
+    }
+    /**
+     * @internal
+     */
+    serialize() {
+        return [this.startLineNumber, this.endLineNumberExclusive];
+    }
+    /**
+     * Converts this 1-based line range to a 0-based offset range (subtracts 1!).
+     * @internal
+     */
+    toOffsetRange() {
+        return new OffsetRange(this.startLineNumber - 1, this.endLineNumberExclusive - 1);
+    }
+    distanceToRange(other) {
+        if (this.endLineNumberExclusive <= other.startLineNumber) {
+            return other.startLineNumber - this.endLineNumberExclusive;
+        }
+        if (other.endLineNumberExclusive <= this.startLineNumber) {
+            return this.startLineNumber - other.endLineNumberExclusive;
+        }
+        return 0;
+    }
+    distanceToLine(lineNumber) {
+        if (this.contains(lineNumber)) {
+            return 0;
+        }
+        if (lineNumber < this.startLineNumber) {
+            return this.startLineNumber - lineNumber;
+        }
+        return lineNumber - this.endLineNumberExclusive;
+    }
+    addMargin(marginTop, marginBottom) {
+        return new LineRange(this.startLineNumber - marginTop, this.endLineNumberExclusive + marginBottom);
+    }
+}
+export class LineRangeSet {
+    constructor(
+    /**
+     * Sorted by start line number.
+     * No two line ranges are touching or intersecting.
+     */
+    _normalizedRanges = []) {
+        this._normalizedRanges = _normalizedRanges;
+    }
+    get ranges() {
+        return this._normalizedRanges;
+    }
+    addRange(range) {
+        if (range.length === 0) {
+            return;
+        }
+        // Idea: Find joinRange such that:
+        // replaceRange = _normalizedRanges.replaceRange(joinRange, range.joinAll(joinRange.map(idx => this._normalizedRanges[idx])))
+        // idx of first element that touches range or that is after range
+        const joinRangeStartIdx = findFirstIdxMonotonousOrArrLen(this._normalizedRanges, r => r.endLineNumberExclusive >= range.startLineNumber);
+        // idx of element after { last element that touches range or that is before range }
+        const joinRangeEndIdxExclusive = findLastIdxMonotonous(this._normalizedRanges, r => r.startLineNumber <= range.endLineNumberExclusive) + 1;
+        if (joinRangeStartIdx === joinRangeEndIdxExclusive) {
+            // If there is no element that touches range, then joinRangeStartIdx === joinRangeEndIdxExclusive and that value is the index of the element after range
+            this._normalizedRanges.splice(joinRangeStartIdx, 0, range);
+        }
+        else if (joinRangeStartIdx === joinRangeEndIdxExclusive - 1) {
+            // Else, there is an element that touches range and in this case it is both the first and last element. Thus we can replace it
+            const joinRange = this._normalizedRanges[joinRangeStartIdx];
+            this._normalizedRanges[joinRangeStartIdx] = joinRange.join(range);
+        }
+        else {
+            // First and last element are different - we need to replace the entire range
+            const joinRange = this._normalizedRanges[joinRangeStartIdx].join(this._normalizedRanges[joinRangeEndIdxExclusive - 1]).join(range);
+            this._normalizedRanges.splice(joinRangeStartIdx, joinRangeEndIdxExclusive - joinRangeStartIdx, joinRange);
+        }
+    }
+    contains(lineNumber) {
+        const rangeThatStartsBeforeEnd = findLastMonotonous(this._normalizedRanges, r => r.startLineNumber <= lineNumber);
+        return !!rangeThatStartsBeforeEnd && rangeThatStartsBeforeEnd.endLineNumberExclusive > lineNumber;
+    }
+    intersects(range) {
+        const rangeThatStartsBeforeEnd = findLastMonotonous(this._normalizedRanges, r => r.startLineNumber < range.endLineNumberExclusive);
+        return !!rangeThatStartsBeforeEnd && rangeThatStartsBeforeEnd.endLineNumberExclusive > range.startLineNumber;
+    }
+    getUnion(other) {
+        if (this._normalizedRanges.length === 0) {
+            return other;
+        }
+        if (other._normalizedRanges.length === 0) {
+            return this;
+        }
+        const result = [];
+        let i1 = 0;
+        let i2 = 0;
+        let current = null;
+        while (i1 < this._normalizedRanges.length || i2 < other._normalizedRanges.length) {
+            let next = null;
+            if (i1 < this._normalizedRanges.length && i2 < other._normalizedRanges.length) {
+                const lineRange1 = this._normalizedRanges[i1];
+                const lineRange2 = other._normalizedRanges[i2];
+                if (lineRange1.startLineNumber < lineRange2.startLineNumber) {
+                    next = lineRange1;
+                    i1++;
+                }
+                else {
+                    next = lineRange2;
+                    i2++;
+                }
+            }
+            else if (i1 < this._normalizedRanges.length) {
+                next = this._normalizedRanges[i1];
+                i1++;
+            }
+            else {
+                next = other._normalizedRanges[i2];
+                i2++;
+            }
+            if (current === null) {
+                current = next;
+            }
+            else {
+                if (current.endLineNumberExclusive >= next.startLineNumber) {
+                    // merge
+                    current = new LineRange(current.startLineNumber, Math.max(current.endLineNumberExclusive, next.endLineNumberExclusive));
+                }
+                else {
+                    // push
+                    result.push(current);
+                    current = next;
+                }
+            }
+        }
+        if (current !== null) {
+            result.push(current);
+        }
+        return new LineRangeSet(result);
+    }
+    /**
+     * Subtracts all ranges in this set from `range` and returns the result.
+     */
+    subtractFrom(range) {
+        // idx of first element that touches range or that is after range
+        const joinRangeStartIdx = findFirstIdxMonotonousOrArrLen(this._normalizedRanges, r => r.endLineNumberExclusive >= range.startLineNumber);
+        // idx of element after { last element that touches range or that is before range }
+        const joinRangeEndIdxExclusive = findLastIdxMonotonous(this._normalizedRanges, r => r.startLineNumber <= range.endLineNumberExclusive) + 1;
+        if (joinRangeStartIdx === joinRangeEndIdxExclusive) {
+            return new LineRangeSet([range]);
+        }
+        const result = [];
+        let startLineNumber = range.startLineNumber;
+        for (let i = joinRangeStartIdx; i < joinRangeEndIdxExclusive; i++) {
+            const r = this._normalizedRanges[i];
+            if (r.startLineNumber > startLineNumber) {
+                result.push(new LineRange(startLineNumber, r.startLineNumber));
+            }
+            startLineNumber = r.endLineNumberExclusive;
+        }
+        if (startLineNumber < range.endLineNumberExclusive) {
+            result.push(new LineRange(startLineNumber, range.endLineNumberExclusive));
+        }
+        return new LineRangeSet(result);
+    }
+    toString() {
+        return this._normalizedRanges.map(r => r.toString()).join(', ');
+    }
+    getIntersection(other) {
+        const result = [];
+        let i1 = 0;
+        let i2 = 0;
+        while (i1 < this._normalizedRanges.length && i2 < other._normalizedRanges.length) {
+            const r1 = this._normalizedRanges[i1];
+            const r2 = other._normalizedRanges[i2];
+            const i = r1.intersect(r2);
+            if (i && !i.isEmpty) {
+                result.push(i);
+            }
+            if (r1.endLineNumberExclusive < r2.endLineNumberExclusive) {
+                i1++;
+            }
+            else {
+                i2++;
+            }
+        }
+        return new LineRangeSet(result);
+    }
+    getWithDelta(value) {
+        return new LineRangeSet(this._normalizedRanges.map(r => r.delta(value)));
+    }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibGluZVJhbmdlLmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vaG9tZS9mcm9zdHkvdnNjb2RlL3NyYy8iLCJzb3VyY2VzIjpbInZzL2VkaXRvci9jb21tb24vY29yZS9yYW5nZXMvbGluZVJhbmdlLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOzs7Z0dBR2dHO0FBRWhHLE9BQU8sRUFBRSxrQkFBa0IsRUFBRSxNQUFNLG1DQUFtQyxDQUFDO0FBQ3ZFLE9BQU8sRUFBRSxXQUFXLEVBQUUsTUFBTSxrQkFBa0IsQ0FBQztBQUMvQyxPQUFPLEVBQVUsS0FBSyxFQUFFLE1BQU0sYUFBYSxDQUFDO0FBQzVDLE9BQU8sRUFBRSw4QkFBOEIsRUFBRSxxQkFBcUIsRUFBRSxrQkFBa0IsRUFBRSxNQUFNLHVDQUF1QyxDQUFDO0FBQ2xJLE9BQU8sRUFBYyxTQUFTLEVBQUUsZ0JBQWdCLEVBQUUsTUFBTSxtQ0FBbUMsQ0FBQztBQUU1Rjs7R0FFRztBQUNILE1BQU0sT0FBTyxTQUFTO0lBQ2QsTUFBTSxDQUFDLFFBQVEsQ0FBQyxlQUF1QixFQUFFLE1BQWM7UUFDN0QsT0FBTyxJQUFJLFNBQVMsQ0FBQyxlQUFlLEVBQUUsZUFBZSxHQUFHLE1BQU0sQ0FBQyxDQUFDO0lBQ2pFLENBQUM7SUFFTSxNQUFNLENBQUMsU0FBUyxDQUFDLEtBQWE7UUFDcEMsT0FBTyxJQUFJLFNBQVMsQ0FBQyxLQUFLLENBQUMsZUFBZSxFQUFFLEtBQUssQ0FBQyxhQUFhLENBQUMsQ0FBQztJQUNsRSxDQUFDO0lBRU0sTUFBTSxDQUFDLGtCQUFrQixDQUFDLEtBQWE7UUFDN0MsT0FBTyxJQUFJLFNBQVMsQ0FBQyxLQUFLLENBQUMsZUFBZSxFQUFFLEtBQUssQ0FBQyxhQUFhLEdBQUcsQ0FBQyxDQUFDLENBQUM7SUFDdEUsQ0FBQzthQUVzQixtQkFBYyxHQUEwQixTQUFTLENBQUMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUMsZUFBZSxFQUFFLGdCQUFnQixDQUFDLENBQUM7SUFFNUcsTUFBTSxDQUFDLFFBQVEsQ0FBQyxDQUFZLEVBQUUsQ0FBd0I7UUFDNUQsSUFBSSxDQUFDLENBQUMsRUFBRSxDQUFDO1lBQ1IsT0FBTyxDQUFDLENBQUMsQ0FBQyxDQUFDO1FBQ1osQ0FBQztRQUNELElBQUksQ0FBQyxDQUFDLGVBQWUsR0FBRyxDQUFDLENBQUMsZUFBZSxJQUFJLENBQUMsQ0FBQyxzQkFBc0IsR0FBRyxDQUFDLENBQUMsc0JBQXNCLEVBQUUsQ0FBQztZQUNsRyxPQUFPO2dCQUNOLElBQUksU0FBUyxDQUFDLENBQUMsQ0FBQyxlQUFlLEVBQUUsQ0FBQyxDQUFDLGVBQWUsQ0FBQztnQkFDbkQsSUFBSSxTQUFTLENBQUMsQ0FBQyxDQUFDLHNCQUFzQixFQUFFLENBQUMsQ0FBQyxzQkFBc0IsQ0FBQzthQUNqRSxDQUFDO1FBQ0gsQ0FBQzthQUFNLElBQUksQ0FBQyxDQUFDLGVBQWUsSUFBSSxDQUFDLENBQUMsZUFBZSxJQUFJLENBQUMsQ0FBQyxzQkFBc0IsSUFBSSxDQUFDLENBQUMsc0JBQXNCLEVBQUUsQ0FBQztZQUMzRyxPQUFPLEVBQUUsQ0FBQztRQUNYLENBQUM7YUFBTSxJQUFJLENBQUMsQ0FBQyxzQkFBc0IsR0FBRyxDQUFDLENBQUMsc0JBQXNCLEVBQUUsQ0FBQztZQUNoRSxPQUFPLENBQUMsSUFBSSxTQUFTLENBQUMsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsc0JBQXNCLEVBQUUsQ0FBQyxDQUFDLGVBQWUsQ0FBQyxFQUFFLENBQUMsQ0FBQyxzQkFBc0IsQ0FBQyxDQUFDLENBQUM7UUFDekcsQ0FBQzthQUFNLENBQUM7WUFDUCxPQUFPLENBQUMsSUFBSSxTQUFTLENBQUMsQ0FBQyxDQUFDLGVBQWUsRUFBRSxJQUFJLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxlQUFlLEVBQUUsQ0FBQyxDQUFDLHNCQUFzQixDQUFDLENBQUMsQ0FBQyxDQUFDO1FBQ2xHLENBQUM7SUFDRixDQUFDO0lBRUQ7O09BRUc7SUFDSSxNQUFNLENBQUMsUUFBUSxDQUFDLFVBQTZDO1FBQ25FLElBQUksVUFBVSxDQUFDLE1BQU0sS0FBSyxDQUFDLEVBQUUsQ0FBQztZQUM3QixPQUFPLEVBQUUsQ0FBQztRQUNYLENBQUM7UUFDRCxJQUFJLE1BQU0sR0FBRyxJQUFJLFlBQVksQ0FBQyxVQUFVLENBQUMsQ0FBQyxDQUFDLENBQUMsS0FBSyxFQUFFLENBQUMsQ0FBQztRQUNyRCxLQUFLLElBQUksQ0FBQyxHQUFHLENBQUMsRUFBRSxDQUFDLEdBQUcsVUFBVSxDQUFDLE1BQU0sRUFBRSxDQUFDLEVBQUUsRUFBRSxDQUFDO1lBQzVDLE1BQU0sR0FBRyxNQUFNLENBQUMsUUFBUSxDQUFDLElBQUksWUFBWSxDQUFDLFVBQVUsQ0FBQyxDQUFDLENBQUMsQ0FBQyxLQUFLLEVBQUUsQ0FBQyxDQUFDLENBQUM7UUFDbkUsQ0FBQztRQUNELE9BQU8sTUFBTSxDQUFDLE1BQU0sQ0FBQztJQUN0QixDQUFDO0lBRU0sTUFBTSxDQUFDLElBQUksQ0FBQyxVQUF1QjtRQUN6QyxJQUFJLFVBQVUsQ0FBQyxNQUFNLEtBQUssQ0FBQyxFQUFFLENBQUM7WUFDN0IsTUFBTSxJQUFJLGtCQUFrQixDQUFDLDRCQUE0QixDQUFDLENBQUM7UUFDNUQsQ0FBQztRQUNELElBQUksZUFBZSxHQUFHLFVBQVUsQ0FBQyxDQUFDLENBQUMsQ0FBQyxlQUFlLENBQUM7UUFDcEQsSUFBSSxzQkFBc0IsR0FBRyxVQUFVLENBQUMsQ0FBQyxDQUFDLENBQUMsc0JBQXNCLENBQUM7UUFDbEUsS0FBSyxJQUFJLENBQUMsR0FBRyxDQUFDLEVBQUUsQ0FBQyxHQUFHLFVBQVUsQ0FBQyxNQUFNLEVBQUUsQ0FBQyxFQUFFLEVBQUUsQ0FBQztZQUM1QyxlQUFlLEdBQUcsSUFBSSxDQUFDLEdBQUcsQ0FBQyxlQUFlLEVBQUUsVUFBVSxDQUFDLENBQUMsQ0FBQyxDQUFDLGVBQWUsQ0FBQyxDQUFDO1lBQzNFLHNCQUFzQixHQUFHLElBQUksQ0FBQyxHQUFHLENBQUMsc0JBQXNCLEVBQUUsVUFBVSxDQUFDLENBQUMsQ0FBQyxDQUFDLHNCQUFzQixDQUFDLENBQUM7UUFDakcsQ0FBQztRQUNELE9BQU8sSUFBSSxTQUFTLENBQUMsZUFBZSxFQUFFLHNCQUFzQixDQUFDLENBQUM7SUFDL0QsQ0FBQztJQUVEOztPQUVHO0lBQ0ksTUFBTSxDQUFDLFdBQVcsQ0FBQyxTQUErQjtRQUN4RCxPQUFPLElBQUksU0FBUyxDQUFDLFNBQVMsQ0FBQyxDQUFDLENBQUMsRUFBRSxTQUFTLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQztJQUNsRCxDQUFDO0lBWUQsWUFDQyxlQUF1QixFQUN2QixzQkFBOEI7UUFFOUIsSUFBSSxlQUFlLEdBQUcsc0JBQXNCLEVBQUUsQ0FBQztZQUM5QyxNQUFNLElBQUksa0JBQWtCLENBQUMsbUJBQW1CLGVBQWUsMkNBQTJDLHNCQUFzQixFQUFFLENBQUMsQ0FBQztRQUNySSxDQUFDO1FBQ0QsSUFBSSxDQUFDLGVBQWUsR0FBRyxlQUFlLENBQUM7UUFDdkMsSUFBSSxDQUFDLHNCQUFzQixHQUFHLHNCQUFzQixDQUFDO0lBQ3RELENBQUM7SUFFRDs7T0FFRztJQUNJLFFBQVEsQ0FBQyxVQUFrQjtRQUNqQyxPQUFPLElBQUksQ0FBQyxlQUFlLElBQUksVUFBVSxJQUFJLFVBQVUsR0FBRyxJQUFJLENBQUMsc0JBQXNCLENBQUM7SUFDdkYsQ0FBQztJQUVNLGFBQWEsQ0FBQyxLQUFnQjtRQUNwQyxPQUFPLElBQUksQ0FBQyxlQUFlLElBQUksS0FBSyxDQUFDLGVBQWUsSUFBSSxLQUFLLENBQUMsc0JBQXNCLElBQUksSUFBSSxDQUFDLHNCQUFzQixDQUFDO0lBQ3JILENBQUM7SUFFRDs7T0FFRztJQUNILElBQUksT0FBTztRQUNWLE9BQU8sSUFBSSxDQUFDLGVBQWUsS0FBSyxJQUFJLENBQUMsc0JBQXNCLENBQUM7SUFDN0QsQ0FBQztJQUVEOztPQUVHO0lBQ0ksS0FBSyxDQUFDLE1BQWM7UUFDMUIsT0FBTyxJQUFJLFNBQVMsQ0FBQyxJQUFJLENBQUMsZUFBZSxHQUFHLE1BQU0sRUFBRSxJQUFJLENBQUMsc0JBQXNCLEdBQUcsTUFBTSxDQUFDLENBQUM7SUFDM0YsQ0FBQztJQUVNLFdBQVcsQ0FBQyxNQUFjO1FBQ2hDLE9BQU8sSUFBSSxTQUFTLENBQUMsSUFBSSxDQUFDLGVBQWUsRUFBRSxJQUFJLENBQUMsc0JBQXNCLEdBQUcsTUFBTSxDQUFDLENBQUM7SUFDbEYsQ0FBQztJQUVEOztPQUVHO0lBQ0gsSUFBVyxNQUFNO1FBQ2hCLE9BQU8sSUFBSSxDQUFDLHNCQUFzQixHQUFHLElBQUksQ0FBQyxlQUFlLENBQUM7SUFDM0QsQ0FBQztJQUVEOztPQUVHO0lBQ0ksSUFBSSxDQUFDLEtBQWdCO1FBQzNCLE9BQU8sSUFBSSxTQUFTLENBQ25CLElBQUksQ0FBQyxHQUFHLENBQUMsSUFBSSxDQUFDLGVBQWUsRUFBRSxLQUFLLENBQUMsZUFBZSxDQUFDLEVBQ3JELElBQUksQ0FBQyxHQUFHLENBQUMsSUFBSSxDQUFDLHNCQUFzQixFQUFFLEtBQUssQ0FBQyxzQkFBc0IsQ0FBQyxDQUNuRSxDQUFDO0lBQ0gsQ0FBQztJQUVNLFFBQVE7UUFDZCxPQUFPLElBQUksSUFBSSxDQUFDLGVBQWUsSUFBSSxJQUFJLENBQUMsc0JBQXNCLEdBQUcsQ0FBQztJQUNuRSxDQUFDO0lBRUQ7OztPQUdHO0lBQ0ksU0FBUyxDQUFDLEtBQWdCO1FBQ2hDLE1BQU0sZUFBZSxHQUFHLElBQUksQ0FBQyxHQUFHLENBQUMsSUFBSSxDQUFDLGVBQWUsRUFBRSxLQUFLLENBQUMsZUFBZSxDQUFDLENBQUM7UUFDOUUsTUFBTSxzQkFBc0IsR0FBRyxJQUFJLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxzQkFBc0IsRUFBRSxLQUFLLENBQUMsc0JBQXNCLENBQUMsQ0FBQztRQUNuRyxJQUFJLGVBQWUsSUFBSSxzQkFBc0IsRUFBRSxDQUFDO1lBQy9DLE9BQU8sSUFBSSxTQUFTLENBQUMsZUFBZSxFQUFFLHNCQUFzQixDQUFDLENBQUM7UUFDL0QsQ0FBQztRQUNELE9BQU8sU0FBUyxDQUFDO0lBQ2xCLENBQUM7SUFFTSxnQkFBZ0IsQ0FBQyxLQUFnQjtRQUN2QyxPQUFPLElBQUksQ0FBQyxlQUFlLEdBQUcsS0FBSyxDQUFDLHNCQUFzQixJQUFJLEtBQUssQ0FBQyxlQUFlLEdBQUcsSUFBSSxDQUFDLHNCQUFzQixDQUFDO0lBQ25ILENBQUM7SUFFTSxtQkFBbUIsQ0FBQyxLQUFnQjtRQUMxQyxPQUFPLElBQUksQ0FBQyxlQUFlLElBQUksS0FBSyxDQUFDLHNCQUFzQixJQUFJLEtBQUssQ0FBQyxlQUFlLElBQUksSUFBSSxDQUFDLHNCQUFzQixDQUFDO0lBQ3JILENBQUM7SUFFTSxNQUFNLENBQUMsQ0FBWTtRQUN6QixPQUFPLElBQUksQ0FBQyxlQUFlLEtBQUssQ0FBQyxDQUFDLGVBQWUsSUFBSSxJQUFJLENBQUMsc0JBQXNCLEtBQUssQ0FBQyxDQUFDLHNCQUFzQixDQUFDO0lBQy9HLENBQUM7SUFFTSxnQkFBZ0I7UUFDdEIsSUFBSSxJQUFJLENBQUMsT0FBTyxFQUFFLENBQUM7WUFDbEIsT0FBTyxJQUFJLENBQUM7UUFDYixDQUFDO1FBQ0QsT0FBTyxJQUFJLEtBQUssQ0FBQyxJQUFJLENBQUMsZUFBZSxFQUFFLENBQUMsRUFBRSxJQUFJLENBQUMsc0JBQXNCLEdBQUcsQ0FBQyxFQUFFLE1BQU0sQ0FBQyxnQkFBZ0IsQ0FBQyxDQUFDO0lBQ3JHLENBQUM7SUFFRDs7TUFFRTtJQUNLLGdCQUFnQjtRQUN0QixPQUFPLElBQUksS0FBSyxDQUFDLElBQUksQ0FBQyxlQUFlLEVBQUUsQ0FBQyxFQUFFLElBQUksQ0FBQyxzQkFBc0IsRUFBRSxDQUFDLENBQUMsQ0FBQztJQUMzRSxDQUFDO0lBRU0sY0FBYyxDQUFJLENBQTRCO1FBQ3BELE1BQU0sTUFBTSxHQUFRLEVBQUUsQ0FBQztRQUN2QixLQUFLLElBQUksVUFBVSxHQUFHLElBQUksQ0FBQyxlQUFlLEVBQUUsVUFBVSxHQUFHLElBQUksQ0FBQyxzQkFBc0IsRUFBRSxVQUFVLEVBQUUsRUFBRSxDQUFDO1lBQ3BHLE1BQU0sQ0FBQyxJQUFJLENBQUMsQ0FBQyxDQUFDLFVBQVUsQ0FBQyxDQUFDLENBQUM7UUFDNUIsQ0FBQztRQUNELE9BQU8sTUFBTSxDQUFDO0lBQ2YsQ0FBQztJQUVNLE9BQU8sQ0FBQyxDQUErQjtRQUM3QyxLQUFLLElBQUksVUFBVSxHQUFHLElBQUksQ0FBQyxlQUFlLEVBQUUsVUFBVSxHQUFHLElBQUksQ0FBQyxzQkFBc0IsRUFBRSxVQUFVLEVBQUUsRUFBRSxDQUFDO1lBQ3BHLENBQUMsQ0FBQyxVQUFVLENBQUMsQ0FBQztRQUNmLENBQUM7SUFDRixDQUFDO0lBRUQ7O09BRUc7SUFDSSxTQUFTO1FBQ2YsT0FBTyxDQUFDLElBQUksQ0FBQyxlQUFlLEVBQUUsSUFBSSxDQUFDLHNCQUFzQixDQUFDLENBQUM7SUFDNUQsQ0FBQztJQUVEOzs7T0FHRztJQUNJLGFBQWE7UUFDbkIsT0FBTyxJQUFJLFdBQVcsQ0FBQyxJQUFJLENBQUMsZUFBZSxHQUFHLENBQUMsRUFBRSxJQUFJLENBQUMsc0JBQXNCLEdBQUcsQ0FBQyxDQUFDLENBQUM7SUFDbkYsQ0FBQztJQUVNLGVBQWUsQ0FBQyxLQUFnQjtRQUN0QyxJQUFJLElBQUksQ0FBQyxzQkFBc0IsSUFBSSxLQUFLLENBQUMsZUFBZSxFQUFFLENBQUM7WUFDMUQsT0FBTyxLQUFLLENBQUMsZUFBZSxHQUFHLElBQUksQ0FBQyxzQkFBc0IsQ0FBQztRQUM1RCxDQUFDO1FBQ0QsSUFBSSxLQUFLLENBQUMsc0JBQXNCLElBQUksSUFBSSxDQUFDLGVBQWUsRUFBRSxDQUFDO1lBQzFELE9BQU8sSUFBSSxDQUFDLGVBQWUsR0FBRyxLQUFLLENBQUMsc0JBQXNCLENBQUM7UUFDNUQsQ0FBQztRQUNELE9BQU8sQ0FBQyxDQUFDO0lBQ1YsQ0FBQztJQUVNLGNBQWMsQ0FBQyxVQUFrQjtRQUN2QyxJQUFJLElBQUksQ0FBQyxRQUFRLENBQUMsVUFBVSxDQUFDLEVBQUUsQ0FBQztZQUMvQixPQUFPLENBQUMsQ0FBQztRQUNWLENBQUM7UUFDRCxJQUFJLFVBQVUsR0FBRyxJQUFJLENBQUMsZUFBZSxFQUFFLENBQUM7WUFDdkMsT0FBTyxJQUFJLENBQUMsZUFBZSxHQUFHLFVBQVUsQ0FBQztRQUMxQyxDQUFDO1FBQ0QsT0FBTyxVQUFVLEdBQUcsSUFBSSxDQUFDLHNCQUFzQixDQUFDO0lBQ2pELENBQUM7SUFFTSxTQUFTLENBQUMsU0FBaUIsRUFBRSxZQUFvQjtRQUN2RCxPQUFPLElBQUksU0FBUyxDQUNuQixJQUFJLENBQUMsZUFBZSxHQUFHLFNBQVMsRUFDaEMsSUFBSSxDQUFDLHNCQUFzQixHQUFHLFlBQVksQ0FDMUMsQ0FBQztJQUNILENBQUM7O0FBTUYsTUFBTSxPQUFPLFlBQVk7SUFDeEI7SUFDQzs7O09BR0c7SUFDYyxvQkFBaUMsRUFBRTtRQUFuQyxzQkFBaUIsR0FBakIsaUJBQWlCLENBQWtCO0lBRXJELENBQUM7SUFFRCxJQUFJLE1BQU07UUFDVCxPQUFPLElBQUksQ0FBQyxpQkFBaUIsQ0FBQztJQUMvQixDQUFDO0lBRUQsUUFBUSxDQUFDLEtBQWdCO1FBQ3hCLElBQUksS0FBSyxDQUFDLE1BQU0sS0FBSyxDQUFDLEVBQUUsQ0FBQztZQUN4QixPQUFPO1FBQ1IsQ0FBQztRQUVELGtDQUFrQztRQUNsQyw2SEFBNkg7UUFFN0gsaUVBQWlFO1FBQ2pFLE1BQU0saUJBQWlCLEdBQUcsOEJBQThCLENBQUMsSUFBSSxDQUFDLGlCQUFpQixFQUFFLENBQUMsQ0FBQyxFQUFFLENBQUMsQ0FBQyxDQUFDLHNCQUFzQixJQUFJLEtBQUssQ0FBQyxlQUFlLENBQUMsQ0FBQztRQUN6SSxtRkFBbUY7UUFDbkYsTUFBTSx3QkFBd0IsR0FBRyxxQkFBcUIsQ0FBQyxJQUFJLENBQUMsaUJBQWlCLEVBQUUsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUMsZUFBZSxJQUFJLEtBQUssQ0FBQyxzQkFBc0IsQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUUzSSxJQUFJLGlCQUFpQixLQUFLLHdCQUF3QixFQUFFLENBQUM7WUFDcEQsd0pBQXdKO1lBQ3hKLElBQUksQ0FBQyxpQkFBaUIsQ0FBQyxNQUFNLENBQUMsaUJBQWlCLEVBQUUsQ0FBQyxFQUFFLEtBQUssQ0FBQyxDQUFDO1FBQzVELENBQUM7YUFBTSxJQUFJLGlCQUFpQixLQUFLLHdCQUF3QixHQUFHLENBQUMsRUFBRSxDQUFDO1lBQy9ELDhIQUE4SDtZQUM5SCxNQUFNLFNBQVMsR0FBRyxJQUFJLENBQUMsaUJBQWlCLENBQUMsaUJBQWlCLENBQUMsQ0FBQztZQUM1RCxJQUFJLENBQUMsaUJBQWlCLENBQUMsaUJBQWlCLENBQUMsR0FBRyxTQUFTLENBQUMsSUFBSSxDQUFDLEtBQUssQ0FBQyxDQUFDO1FBQ25FLENBQUM7YUFBTSxDQUFDO1lBQ1AsNkVBQTZFO1lBQzdFLE1BQU0sU0FBUyxHQUFHLElBQUksQ0FBQyxpQkFBaUIsQ0FBQyxpQkFBaUIsQ0FBQyxDQUFDLElBQUksQ0FBQyxJQUFJLENBQUMsaUJBQWlCLENBQUMsd0JBQXdCLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQyxJQUFJLENBQUMsS0FBSyxDQUFDLENBQUM7WUFDbkksSUFBSSxDQUFDLGlCQUFpQixDQUFDLE1BQU0sQ0FBQyxpQkFBaUIsRUFBRSx3QkFBd0IsR0FBRyxpQkFBaUIsRUFBRSxTQUFTLENBQUMsQ0FBQztRQUMzRyxDQUFDO0lBQ0YsQ0FBQztJQUVELFFBQVEsQ0FBQyxVQUFrQjtRQUMxQixNQUFNLHdCQUF3QixHQUFHLGtCQUFrQixDQUFDLElBQUksQ0FBQyxpQkFBaUIsRUFBRSxDQUFDLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQyxlQUFlLElBQUksVUFBVSxDQUFDLENBQUM7UUFDbEgsT0FBTyxDQUFDLENBQUMsd0JBQXdCLElBQUksd0JBQXdCLENBQUMsc0JBQXNCLEdBQUcsVUFBVSxDQUFDO0lBQ25HLENBQUM7SUFFRCxVQUFVLENBQUMsS0FBZ0I7UUFDMUIsTUFBTSx3QkFBd0IsR0FBRyxrQkFBa0IsQ0FBQyxJQUFJLENBQUMsaUJBQWlCLEVBQUUsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUMsZUFBZSxHQUFHLEtBQUssQ0FBQyxzQkFBc0IsQ0FBQyxDQUFDO1FBQ25JLE9BQU8sQ0FBQyxDQUFDLHdCQUF3QixJQUFJLHdCQUF3QixDQUFDLHNCQUFzQixHQUFHLEtBQUssQ0FBQyxlQUFlLENBQUM7SUFDOUcsQ0FBQztJQUVELFFBQVEsQ0FBQyxLQUFtQjtRQUMzQixJQUFJLElBQUksQ0FBQyxpQkFBaUIsQ0FBQyxNQUFNLEtBQUssQ0FBQyxFQUFFLENBQUM7WUFDekMsT0FBTyxLQUFLLENBQUM7UUFDZCxDQUFDO1FBQ0QsSUFBSSxLQUFLLENBQUMsaUJBQWlCLENBQUMsTUFBTSxLQUFLLENBQUMsRUFBRSxDQUFDO1lBQzFDLE9BQU8sSUFBSSxDQUFDO1FBQ2IsQ0FBQztRQUVELE1BQU0sTUFBTSxHQUFnQixFQUFFLENBQUM7UUFDL0IsSUFBSSxFQUFFLEdBQUcsQ0FBQyxDQUFDO1FBQ1gsSUFBSSxFQUFFLEdBQUcsQ0FBQyxDQUFDO1FBQ1gsSUFBSSxPQUFPLEdBQXFCLElBQUksQ0FBQztRQUNyQyxPQUFPLEVBQUUsR0FBRyxJQUFJLENBQUMsaUJBQWlCLENBQUMsTUFBTSxJQUFJLEVBQUUsR0FBRyxLQUFLLENBQUMsaUJBQWlCLENBQUMsTUFBTSxFQUFFLENBQUM7WUFDbEYsSUFBSSxJQUFJLEdBQXFCLElBQUksQ0FBQztZQUNsQyxJQUFJLEVBQUUsR0FBRyxJQUFJLENBQUMsaUJBQWlCLENBQUMsTUFBTSxJQUFJLEVBQUUsR0FBRyxLQUFLLENBQUMsaUJBQWlCLENBQUMsTUFBTSxFQUFFLENBQUM7Z0JBQy9FLE1BQU0sVUFBVSxHQUFHLElBQUksQ0FBQyxpQkFBaUIsQ0FBQyxFQUFFLENBQUMsQ0FBQztnQkFDOUMsTUFBTSxVQUFVLEdBQUcsS0FBSyxDQUFDLGlCQUFpQixDQUFDLEVBQUUsQ0FBQyxDQUFDO2dCQUMvQyxJQUFJLFVBQVUsQ0FBQyxlQUFlLEdBQUcsVUFBVSxDQUFDLGVBQWUsRUFBRSxDQUFDO29CQUM3RCxJQUFJLEdBQUcsVUFBVSxDQUFDO29CQUNsQixFQUFFLEVBQUUsQ0FBQztnQkFDTixDQUFDO3FCQUFNLENBQUM7b0JBQ1AsSUFBSSxHQUFHLFVBQVUsQ0FBQztvQkFDbEIsRUFBRSxFQUFFLENBQUM7Z0JBQ04sQ0FBQztZQUNGLENBQUM7aUJBQU0sSUFBSSxFQUFFLEdBQUcsSUFBSSxDQUFDLGlCQUFpQixDQUFDLE1BQU0sRUFBRSxDQUFDO2dCQUMvQyxJQUFJLEdBQUcsSUFBSSxDQUFDLGlCQUFpQixDQUFDLEVBQUUsQ0FBQyxDQUFDO2dCQUNsQyxFQUFFLEVBQUUsQ0FBQztZQUNOLENBQUM7aUJBQU0sQ0FBQztnQkFDUCxJQUFJLEdBQUcsS0FBSyxDQUFDLGlCQUFpQixDQUFDLEVBQUUsQ0FBQyxDQUFDO2dCQUNuQyxFQUFFLEVBQUUsQ0FBQztZQUNOLENBQUM7WUFFRCxJQUFJLE9BQU8sS0FBSyxJQUFJLEVBQUUsQ0FBQztnQkFDdEIsT0FBTyxHQUFHLElBQUksQ0FBQztZQUNoQixDQUFDO2lCQUFNLENBQUM7Z0JBQ1AsSUFBSSxPQUFPLENBQUMsc0JBQXNCLElBQUksSUFBSSxDQUFDLGVBQWUsRUFBRSxDQUFDO29CQUM1RCxRQUFRO29CQUNSLE9BQU8sR0FBRyxJQUFJLFNBQVMsQ0FBQyxPQUFPLENBQUMsZUFBZSxFQUFFLElBQUksQ0FBQyxHQUFHLENBQUMsT0FBTyxDQUFDLHNCQUFzQixFQUFFLElBQUksQ0FBQyxzQkFBc0IsQ0FBQyxDQUFDLENBQUM7Z0JBQ3pILENBQUM7cUJBQU0sQ0FBQztvQkFDUCxPQUFPO29CQUNQLE1BQU0sQ0FBQyxJQUFJLENBQUMsT0FBTyxDQUFDLENBQUM7b0JBQ3JCLE9BQU8sR0FBRyxJQUFJLENBQUM7Z0JBQ2hCLENBQUM7WUFDRixDQUFDO1FBQ0YsQ0FBQztRQUNELElBQUksT0FBTyxLQUFLLElBQUksRUFBRSxDQUFDO1lBQ3RCLE1BQU0sQ0FBQyxJQUFJLENBQUMsT0FBTyxDQUFDLENBQUM7UUFDdEIsQ0FBQztRQUNELE9BQU8sSUFBSSxZQUFZLENBQUMsTUFBTSxDQUFDLENBQUM7SUFDakMsQ0FBQztJQUVEOztPQUVHO0lBQ0gsWUFBWSxDQUFDLEtBQWdCO1FBQzVCLGlFQUFpRTtRQUNqRSxNQUFNLGlCQUFpQixHQUFHLDhCQUE4QixDQUFDLElBQUksQ0FBQyxpQkFBaUIsRUFBRSxDQUFDLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQyxzQkFBc0IsSUFBSSxLQUFLLENBQUMsZUFBZSxDQUFDLENBQUM7UUFDekksbUZBQW1GO1FBQ25GLE1BQU0sd0JBQXdCLEdBQUcscUJBQXFCLENBQUMsSUFBSSxDQUFDLGlCQUFpQixFQUFFLENBQUMsQ0FBQyxFQUFFLENBQUMsQ0FBQyxDQUFDLGVBQWUsSUFBSSxLQUFLLENBQUMsc0JBQXNCLENBQUMsR0FBRyxDQUFDLENBQUM7UUFFM0ksSUFBSSxpQkFBaUIsS0FBSyx3QkFBd0IsRUFBRSxDQUFDO1lBQ3BELE9BQU8sSUFBSSxZQUFZLENBQUMsQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDO1FBQ2xDLENBQUM7UUFFRCxNQUFNLE1BQU0sR0FBZ0IsRUFBRSxDQUFDO1FBQy9CLElBQUksZUFBZSxHQUFHLEtBQUssQ0FBQyxlQUFlLENBQUM7UUFDNUMsS0FBSyxJQUFJLENBQUMsR0FBRyxpQkFBaUIsRUFBRSxDQUFDLEdBQUcsd0JBQXdCLEVBQUUsQ0FBQyxFQUFFLEVBQUUsQ0FBQztZQUNuRSxNQUFNLENBQUMsR0FBRyxJQUFJLENBQUMsaUJBQWlCLENBQUMsQ0FBQyxDQUFDLENBQUM7WUFDcEMsSUFBSSxDQUFDLENBQUMsZUFBZSxHQUFHLGVBQWUsRUFBRSxDQUFDO2dCQUN6QyxNQUFNLENBQUMsSUFBSSxDQUFDLElBQUksU0FBUyxDQUFDLGVBQWUsRUFBRSxDQUFDLENBQUMsZUFBZSxDQUFDLENBQUMsQ0FBQztZQUNoRSxDQUFDO1lBQ0QsZUFBZSxHQUFHLENBQUMsQ0FBQyxzQkFBc0IsQ0FBQztRQUM1QyxDQUFDO1FBQ0QsSUFBSSxlQUFlLEdBQUcsS0FBSyxDQUFDLHNCQUFzQixFQUFFLENBQUM7WUFDcEQsTUFBTSxDQUFDLElBQUksQ0FBQyxJQUFJLFNBQVMsQ0FBQyxlQUFlLEVBQUUsS0FBSyxDQUFDLHNCQUFzQixDQUFDLENBQUMsQ0FBQztRQUMzRSxDQUFDO1FBRUQsT0FBTyxJQUFJLFlBQVksQ0FBQyxNQUFNLENBQUMsQ0FBQztJQUNqQyxDQUFDO0lBRUQsUUFBUTtRQUNQLE9BQU8sSUFBSSxDQUFDLGlCQUFpQixDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQyxRQUFRLEVBQUUsQ0FBQyxDQUFDLElBQUksQ0FBQyxJQUFJLENBQUMsQ0FBQztJQUNqRSxDQUFDO0lBRUQsZUFBZSxDQUFDLEtBQW1CO1FBQ2xDLE1BQU0sTUFBTSxHQUFnQixFQUFFLENBQUM7UUFFL0IsSUFBSSxFQUFFLEdBQUcsQ0FBQyxDQUFDO1FBQ1gsSUFBSSxFQUFFLEdBQUcsQ0FBQyxDQUFDO1FBQ1gsT0FBTyxFQUFFLEdBQUcsSUFBSSxDQUFDLGlCQUFpQixDQUFDLE1BQU0sSUFBSSxFQUFFLEdBQUcsS0FBSyxDQUFDLGlCQUFpQixDQUFDLE1BQU0sRUFBRSxDQUFDO1lBQ2xGLE1BQU0sRUFBRSxHQUFHLElBQUksQ0FBQyxpQkFBaUIsQ0FBQyxFQUFFLENBQUMsQ0FBQztZQUN0QyxNQUFNLEVBQUUsR0FBRyxLQUFLLENBQUMsaUJBQWlCLENBQUMsRUFBRSxDQUFDLENBQUM7WUFFdkMsTUFBTSxDQUFDLEdBQUcsRUFBRSxDQUFDLFNBQVMsQ0FBQyxFQUFFLENBQUMsQ0FBQztZQUMzQixJQUFJLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQyxPQUFPLEVBQUUsQ0FBQztnQkFDckIsTUFBTSxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQztZQUNoQixDQUFDO1lBRUQsSUFBSSxFQUFFLENBQUMsc0JBQXNCLEdBQUcsRUFBRSxDQUFDLHNCQUFzQixFQUFFLENBQUM7Z0JBQzNELEVBQUUsRUFBRSxDQUFDO1lBQ04sQ0FBQztpQkFBTSxDQUFDO2dCQUNQLEVBQUUsRUFBRSxDQUFDO1lBQ04sQ0FBQztRQUNGLENBQUM7UUFFRCxPQUFPLElBQUksWUFBWSxDQUFDLE1BQU0sQ0FBQyxDQUFDO0lBQ2pDLENBQUM7SUFFRCxZQUFZLENBQUMsS0FBYTtRQUN6QixPQUFPLElBQUksWUFBWSxDQUFDLElBQUksQ0FBQyxpQkFBaUIsQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUMsS0FBSyxDQUFDLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQztJQUMxRSxDQUFDO0NBQ0QifQ==

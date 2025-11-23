@@ -1,0 +1,65 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { registerSingleton } from '../../../platform/instantiation/common/extensions.js';
+import { IExtHostOutputService, ExtHostOutputService } from './extHostOutput.js';
+import { IExtHostWorkspace, ExtHostWorkspace } from './extHostWorkspace.js';
+import { IExtHostDecorations, ExtHostDecorations } from './extHostDecorations.js';
+import { IExtHostConfiguration, ExtHostConfiguration } from './extHostConfiguration.js';
+import { IExtHostCommands, ExtHostCommands } from './extHostCommands.js';
+import { IExtHostDocumentsAndEditors, ExtHostDocumentsAndEditors } from './extHostDocumentsAndEditors.js';
+import { IExtHostTerminalService, WorkerExtHostTerminalService } from './extHostTerminalService.js';
+import { IExtHostTask, WorkerExtHostTask } from './extHostTask.js';
+import { IExtHostDebugService, WorkerExtHostDebugService } from './extHostDebugService.js';
+import { IExtHostSearch, ExtHostSearch } from './extHostSearch.js';
+import { IExtHostStorage, ExtHostStorage } from './extHostStorage.js';
+import { IExtHostTunnelService, ExtHostTunnelService } from './extHostTunnelService.js';
+import { IExtHostApiDeprecationService, ExtHostApiDeprecationService, } from './extHostApiDeprecationService.js';
+import { IExtHostWindow, ExtHostWindow } from './extHostWindow.js';
+import { IExtHostConsumerFileSystem, ExtHostConsumerFileSystem } from './extHostFileSystemConsumer.js';
+import { IExtHostFileSystemInfo, ExtHostFileSystemInfo } from './extHostFileSystemInfo.js';
+import { IExtHostSecretState, ExtHostSecretState } from './extHostSecretState.js';
+import { ExtHostEditorTabs, IExtHostEditorTabs } from './extHostEditorTabs.js';
+import { ExtHostLoggerService } from './extHostLoggerService.js';
+import { ILoggerService } from '../../../platform/log/common/log.js';
+import { ExtHostVariableResolverProviderService, IExtHostVariableResolverProvider } from './extHostVariableResolverService.js';
+import { ExtHostLocalizationService, IExtHostLocalizationService } from './extHostLocalizationService.js';
+import { ExtHostManagedSockets, IExtHostManagedSockets } from './extHostManagedSockets.js';
+import { ExtHostLanguageModels, IExtHostLanguageModels } from './extHostLanguageModels.js';
+import { IExtHostTerminalShellIntegration, ExtHostTerminalShellIntegration } from './extHostTerminalShellIntegration.js';
+import { ExtHostTesting, IExtHostTesting } from './extHostTesting.js';
+import { ExtHostMcpService, IExtHostMpcService } from './extHostMcp.js';
+import { ExtHostUrls, IExtHostUrlsService } from './extHostUrls.js';
+import { ExtHostProgress, IExtHostProgress } from './extHostProgress.js';
+import { ExtHostDataChannels, IExtHostDataChannels } from './extHostDataChannels.js';
+registerSingleton(IExtHostLocalizationService, ExtHostLocalizationService, 1 /* InstantiationType.Delayed */);
+registerSingleton(ILoggerService, ExtHostLoggerService, 1 /* InstantiationType.Delayed */);
+registerSingleton(IExtHostApiDeprecationService, ExtHostApiDeprecationService, 1 /* InstantiationType.Delayed */);
+registerSingleton(IExtHostCommands, ExtHostCommands, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostProgress, ExtHostProgress, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostLanguageModels, ExtHostLanguageModels, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostConfiguration, ExtHostConfiguration, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostConsumerFileSystem, ExtHostConsumerFileSystem, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostTesting, ExtHostTesting, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostDebugService, WorkerExtHostDebugService, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostDecorations, ExtHostDecorations, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostDocumentsAndEditors, ExtHostDocumentsAndEditors, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostManagedSockets, ExtHostManagedSockets, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostFileSystemInfo, ExtHostFileSystemInfo, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostOutputService, ExtHostOutputService, 1 /* InstantiationType.Delayed */);
+registerSingleton(IExtHostSearch, ExtHostSearch, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostStorage, ExtHostStorage, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostTask, WorkerExtHostTask, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostTerminalService, WorkerExtHostTerminalService, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostTerminalShellIntegration, ExtHostTerminalShellIntegration, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostTunnelService, ExtHostTunnelService, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostWindow, ExtHostWindow, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostUrlsService, ExtHostUrls, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostWorkspace, ExtHostWorkspace, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostSecretState, ExtHostSecretState, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostEditorTabs, ExtHostEditorTabs, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostVariableResolverProvider, ExtHostVariableResolverProviderService, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostMpcService, ExtHostMcpService, 0 /* InstantiationType.Eager */);
+registerSingleton(IExtHostDataChannels, ExtHostDataChannels, 0 /* InstantiationType.Eager */);
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZXh0SG9zdC5jb21tb24uc2VydmljZXMuanMiLCJzb3VyY2VSb290IjoiZmlsZTovLy9ob21lL2Zyb3N0eS92c2NvZGUvc3JjLyIsInNvdXJjZXMiOlsidnMvd29ya2JlbmNoL2FwaS9jb21tb24vZXh0SG9zdC5jb21tb24uc2VydmljZXMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7OztnR0FHZ0c7QUFFaEcsT0FBTyxFQUFxQixpQkFBaUIsRUFBRSxNQUFNLHNEQUFzRCxDQUFDO0FBQzVHLE9BQU8sRUFBRSxxQkFBcUIsRUFBRSxvQkFBb0IsRUFBRSxNQUFNLG9CQUFvQixDQUFDO0FBQ2pGLE9BQU8sRUFBRSxpQkFBaUIsRUFBRSxnQkFBZ0IsRUFBRSxNQUFNLHVCQUF1QixDQUFDO0FBQzVFLE9BQU8sRUFBRSxtQkFBbUIsRUFBRSxrQkFBa0IsRUFBRSxNQUFNLHlCQUF5QixDQUFDO0FBQ2xGLE9BQU8sRUFBRSxxQkFBcUIsRUFBRSxvQkFBb0IsRUFBRSxNQUFNLDJCQUEyQixDQUFDO0FBQ3hGLE9BQU8sRUFBRSxnQkFBZ0IsRUFBRSxlQUFlLEVBQUUsTUFBTSxzQkFBc0IsQ0FBQztBQUN6RSxPQUFPLEVBQUUsMkJBQTJCLEVBQUUsMEJBQTBCLEVBQUUsTUFBTSxpQ0FBaUMsQ0FBQztBQUMxRyxPQUFPLEVBQUUsdUJBQXVCLEVBQUUsNEJBQTRCLEVBQUUsTUFBTSw2QkFBNkIsQ0FBQztBQUNwRyxPQUFPLEVBQUUsWUFBWSxFQUFFLGlCQUFpQixFQUFFLE1BQU0sa0JBQWtCLENBQUM7QUFDbkUsT0FBTyxFQUFFLG9CQUFvQixFQUFFLHlCQUF5QixFQUFFLE1BQU0sMEJBQTBCLENBQUM7QUFDM0YsT0FBTyxFQUFFLGNBQWMsRUFBRSxhQUFhLEVBQUUsTUFBTSxvQkFBb0IsQ0FBQztBQUNuRSxPQUFPLEVBQUUsZUFBZSxFQUFFLGNBQWMsRUFBRSxNQUFNLHFCQUFxQixDQUFDO0FBQ3RFLE9BQU8sRUFBRSxxQkFBcUIsRUFBRSxvQkFBb0IsRUFBRSxNQUFNLDJCQUEyQixDQUFDO0FBQ3hGLE9BQU8sRUFBRSw2QkFBNkIsRUFBRSw0QkFBNEIsR0FBRyxNQUFNLG1DQUFtQyxDQUFDO0FBQ2pILE9BQU8sRUFBRSxjQUFjLEVBQUUsYUFBYSxFQUFFLE1BQU0sb0JBQW9CLENBQUM7QUFDbkUsT0FBTyxFQUFFLDBCQUEwQixFQUFFLHlCQUF5QixFQUFFLE1BQU0sZ0NBQWdDLENBQUM7QUFDdkcsT0FBTyxFQUFFLHNCQUFzQixFQUFFLHFCQUFxQixFQUFFLE1BQU0sNEJBQTRCLENBQUM7QUFDM0YsT0FBTyxFQUFFLG1CQUFtQixFQUFFLGtCQUFrQixFQUFFLE1BQU0seUJBQXlCLENBQUM7QUFDbEYsT0FBTyxFQUFFLGlCQUFpQixFQUFFLGtCQUFrQixFQUFFLE1BQU0sd0JBQXdCLENBQUM7QUFDL0UsT0FBTyxFQUFFLG9CQUFvQixFQUFFLE1BQU0sMkJBQTJCLENBQUM7QUFDakUsT0FBTyxFQUFFLGNBQWMsRUFBRSxNQUFNLHFDQUFxQyxDQUFDO0FBQ3JFLE9BQU8sRUFBRSxzQ0FBc0MsRUFBRSxnQ0FBZ0MsRUFBRSxNQUFNLHFDQUFxQyxDQUFDO0FBQy9ILE9BQU8sRUFBRSwwQkFBMEIsRUFBRSwyQkFBMkIsRUFBRSxNQUFNLGlDQUFpQyxDQUFDO0FBQzFHLE9BQU8sRUFBRSxxQkFBcUIsRUFBRSxzQkFBc0IsRUFBRSxNQUFNLDRCQUE0QixDQUFDO0FBQzNGLE9BQU8sRUFBRSxxQkFBcUIsRUFBRSxzQkFBc0IsRUFBRSxNQUFNLDRCQUE0QixDQUFDO0FBQzNGLE9BQU8sRUFBRSxnQ0FBZ0MsRUFBRSwrQkFBK0IsRUFBRSxNQUFNLHNDQUFzQyxDQUFDO0FBQ3pILE9BQU8sRUFBRSxjQUFjLEVBQUUsZUFBZSxFQUFFLE1BQU0scUJBQXFCLENBQUM7QUFDdEUsT0FBTyxFQUFFLGlCQUFpQixFQUFFLGtCQUFrQixFQUFFLE1BQU0saUJBQWlCLENBQUM7QUFDeEUsT0FBTyxFQUFFLFdBQVcsRUFBRSxtQkFBbUIsRUFBRSxNQUFNLGtCQUFrQixDQUFDO0FBQ3BFLE9BQU8sRUFBRSxlQUFlLEVBQUUsZ0JBQWdCLEVBQUUsTUFBTSxzQkFBc0IsQ0FBQztBQUN6RSxPQUFPLEVBQUUsbUJBQW1CLEVBQUUsb0JBQW9CLEVBQUUsTUFBTSwwQkFBMEIsQ0FBQztBQUVyRixpQkFBaUIsQ0FBQywyQkFBMkIsRUFBRSwwQkFBMEIsb0NBQTRCLENBQUM7QUFDdEcsaUJBQWlCLENBQUMsY0FBYyxFQUFFLG9CQUFvQixvQ0FBNEIsQ0FBQztBQUNuRixpQkFBaUIsQ0FBQyw2QkFBNkIsRUFBRSw0QkFBNEIsb0NBQTRCLENBQUM7QUFDMUcsaUJBQWlCLENBQUMsZ0JBQWdCLEVBQUUsZUFBZSxrQ0FBMEIsQ0FBQztBQUM5RSxpQkFBaUIsQ0FBQyxnQkFBZ0IsRUFBRSxlQUFlLGtDQUEwQixDQUFDO0FBQzlFLGlCQUFpQixDQUFDLHNCQUFzQixFQUFFLHFCQUFxQixrQ0FBMEIsQ0FBQztBQUMxRixpQkFBaUIsQ0FBQyxxQkFBcUIsRUFBRSxvQkFBb0Isa0NBQTBCLENBQUM7QUFDeEYsaUJBQWlCLENBQUMsMEJBQTBCLEVBQUUseUJBQXlCLGtDQUEwQixDQUFDO0FBQ2xHLGlCQUFpQixDQUFDLGVBQWUsRUFBRSxjQUFjLGtDQUEwQixDQUFDO0FBQzVFLGlCQUFpQixDQUFDLG9CQUFvQixFQUFFLHlCQUF5QixrQ0FBMEIsQ0FBQztBQUM1RixpQkFBaUIsQ0FBQyxtQkFBbUIsRUFBRSxrQkFBa0Isa0NBQTBCLENBQUM7QUFDcEYsaUJBQWlCLENBQUMsMkJBQTJCLEVBQUUsMEJBQTBCLGtDQUEwQixDQUFDO0FBQ3BHLGlCQUFpQixDQUFDLHNCQUFzQixFQUFFLHFCQUFxQixrQ0FBMEIsQ0FBQztBQUMxRixpQkFBaUIsQ0FBQyxzQkFBc0IsRUFBRSxxQkFBcUIsa0NBQTBCLENBQUM7QUFDMUYsaUJBQWlCLENBQUMscUJBQXFCLEVBQUUsb0JBQW9CLG9DQUE0QixDQUFDO0FBQzFGLGlCQUFpQixDQUFDLGNBQWMsRUFBRSxhQUFhLGtDQUEwQixDQUFDO0FBQzFFLGlCQUFpQixDQUFDLGVBQWUsRUFBRSxjQUFjLGtDQUEwQixDQUFDO0FBQzVFLGlCQUFpQixDQUFDLFlBQVksRUFBRSxpQkFBaUIsa0NBQTBCLENBQUM7QUFDNUUsaUJBQWlCLENBQUMsdUJBQXVCLEVBQUUsNEJBQTRCLGtDQUEwQixDQUFDO0FBQ2xHLGlCQUFpQixDQUFDLGdDQUFnQyxFQUFFLCtCQUErQixrQ0FBMEIsQ0FBQztBQUM5RyxpQkFBaUIsQ0FBQyxxQkFBcUIsRUFBRSxvQkFBb0Isa0NBQTBCLENBQUM7QUFDeEYsaUJBQWlCLENBQUMsY0FBYyxFQUFFLGFBQWEsa0NBQTBCLENBQUM7QUFDMUUsaUJBQWlCLENBQUMsbUJBQW1CLEVBQUUsV0FBVyxrQ0FBMEIsQ0FBQztBQUM3RSxpQkFBaUIsQ0FBQyxpQkFBaUIsRUFBRSxnQkFBZ0Isa0NBQTBCLENBQUM7QUFDaEYsaUJBQWlCLENBQUMsbUJBQW1CLEVBQUUsa0JBQWtCLGtDQUEwQixDQUFDO0FBQ3BGLGlCQUFpQixDQUFDLGtCQUFrQixFQUFFLGlCQUFpQixrQ0FBMEIsQ0FBQztBQUNsRixpQkFBaUIsQ0FBQyxnQ0FBZ0MsRUFBRSxzQ0FBc0Msa0NBQTBCLENBQUM7QUFDckgsaUJBQWlCLENBQUMsa0JBQWtCLEVBQUUsaUJBQWlCLGtDQUEwQixDQUFDO0FBQ2xGLGlCQUFpQixDQUFDLG9CQUFvQixFQUFFLG1CQUFtQixrQ0FBMEIsQ0FBQyJ9

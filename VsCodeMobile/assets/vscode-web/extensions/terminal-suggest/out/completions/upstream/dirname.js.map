@@ -1,0 +1,1 @@
+{"version":3,"sources":["completions/upstream/dirname.ts"],"names":[],"mappings":";;AAAA,MAAM,cAAc,GAAa;IAChC,IAAI,EAAE,SAAS;IACf,WAAW,EAAE,sCAAsC;IACnD,IAAI,EAAE;QACL,IAAI,EAAE,QAAQ;QACd,WAAW,EAAE,4CAA4C;QACzD,UAAU,EAAE,IAAI;QAChB,QAAQ,EAAE,WAAW;KACrB;CACD,CAAC;AACF,kBAAe,cAAc,CAAC","file":"dirname.js","sourceRoot":"../../../src/"}

@@ -1,0 +1,31 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { isMacintosh } from '../../../base/common/platform.js';
+import { getMachineId, getSqmMachineId, getDevDeviceId } from '../../../base/node/id.js';
+import { machineIdKey, sqmIdKey, devDeviceIdKey } from '../common/telemetry.js';
+export async function resolveMachineId(stateService, logService) {
+    // We cache the machineId for faster lookups
+    // and resolve it only once initially if not cached or we need to replace the macOS iBridge device
+    let machineId = stateService.getItem(machineIdKey);
+    if (typeof machineId !== 'string' || (isMacintosh && machineId === '6c9d2bc8f91b89624add29c0abeae7fb42bf539fa1cdb2e3e57cd668fa9bcead')) {
+        machineId = await getMachineId(logService.error.bind(logService));
+    }
+    return machineId;
+}
+export async function resolveSqmId(stateService, logService) {
+    let sqmId = stateService.getItem(sqmIdKey);
+    if (typeof sqmId !== 'string') {
+        sqmId = await getSqmMachineId(logService.error.bind(logService));
+    }
+    return sqmId;
+}
+export async function resolveDevDeviceId(stateService, logService) {
+    let devDeviceId = stateService.getItem(devDeviceIdKey);
+    if (typeof devDeviceId !== 'string') {
+        devDeviceId = await getDevDeviceId(logService.error.bind(logService));
+    }
+    return devDeviceId;
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidGVsZW1ldHJ5VXRpbHMuanMiLCJzb3VyY2VSb290IjoiZmlsZTovLy9ob21lL2Zyb3N0eS92c2NvZGUvc3JjLyIsInNvdXJjZXMiOlsidnMvcGxhdGZvcm0vdGVsZW1ldHJ5L25vZGUvdGVsZW1ldHJ5VXRpbHMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7OztnR0FHZ0c7QUFFaEcsT0FBTyxFQUFFLFdBQVcsRUFBRSxNQUFNLGtDQUFrQyxDQUFDO0FBQy9ELE9BQU8sRUFBRSxZQUFZLEVBQUUsZUFBZSxFQUFFLGNBQWMsRUFBRSxNQUFNLDBCQUEwQixDQUFDO0FBR3pGLE9BQU8sRUFBRSxZQUFZLEVBQUUsUUFBUSxFQUFFLGNBQWMsRUFBRSxNQUFNLHdCQUF3QixDQUFDO0FBR2hGLE1BQU0sQ0FBQyxLQUFLLFVBQVUsZ0JBQWdCLENBQUMsWUFBK0IsRUFBRSxVQUF1QjtJQUM5Riw0Q0FBNEM7SUFDNUMsa0dBQWtHO0lBQ2xHLElBQUksU0FBUyxHQUFHLFlBQVksQ0FBQyxPQUFPLENBQVMsWUFBWSxDQUFDLENBQUM7SUFDM0QsSUFBSSxPQUFPLFNBQVMsS0FBSyxRQUFRLElBQUksQ0FBQyxXQUFXLElBQUksU0FBUyxLQUFLLGtFQUFrRSxDQUFDLEVBQUUsQ0FBQztRQUN4SSxTQUFTLEdBQUcsTUFBTSxZQUFZLENBQUMsVUFBVSxDQUFDLEtBQUssQ0FBQyxJQUFJLENBQUMsVUFBVSxDQUFDLENBQUMsQ0FBQztJQUNuRSxDQUFDO0lBRUQsT0FBTyxTQUFTLENBQUM7QUFDbEIsQ0FBQztBQUVELE1BQU0sQ0FBQyxLQUFLLFVBQVUsWUFBWSxDQUFDLFlBQStCLEVBQUUsVUFBdUI7SUFDMUYsSUFBSSxLQUFLLEdBQUcsWUFBWSxDQUFDLE9BQU8sQ0FBUyxRQUFRLENBQUMsQ0FBQztJQUNuRCxJQUFJLE9BQU8sS0FBSyxLQUFLLFFBQVEsRUFBRSxDQUFDO1FBQy9CLEtBQUssR0FBRyxNQUFNLGVBQWUsQ0FBQyxVQUFVLENBQUMsS0FBSyxDQUFDLElBQUksQ0FBQyxVQUFVLENBQUMsQ0FBQyxDQUFDO0lBQ2xFLENBQUM7SUFFRCxPQUFPLEtBQUssQ0FBQztBQUNkLENBQUM7QUFFRCxNQUFNLENBQUMsS0FBSyxVQUFVLGtCQUFrQixDQUFDLFlBQStCLEVBQUUsVUFBdUI7SUFDaEcsSUFBSSxXQUFXLEdBQUcsWUFBWSxDQUFDLE9BQU8sQ0FBUyxjQUFjLENBQUMsQ0FBQztJQUMvRCxJQUFJLE9BQU8sV0FBVyxLQUFLLFFBQVEsRUFBRSxDQUFDO1FBQ3JDLFdBQVcsR0FBRyxNQUFNLGNBQWMsQ0FBQyxVQUFVLENBQUMsS0FBSyxDQUFDLElBQUksQ0FBQyxVQUFVLENBQUMsQ0FBQyxDQUFDO0lBQ3ZFLENBQUM7SUFFRCxPQUFPLFdBQVcsQ0FBQztBQUNwQixDQUFDIn0=

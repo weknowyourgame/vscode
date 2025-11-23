@@ -1,0 +1,67 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import assert from 'assert';
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
+import { GlyphMarginLanesModel, } from '../../../common/viewModel/glyphLanesModel.js';
+import { Range } from '../../../common/core/range.js';
+import { GlyphMarginLane } from '../../../common/model.js';
+suite('GlyphLanesModel', () => {
+    let model;
+    ensureNoDisposablesAreLeakedInTestSuite();
+    const lineRange = (startLineNumber, endLineNumber) => new Range(startLineNumber, 1, endLineNumber, 1);
+    const assertLines = (fromLine, n, expected) => {
+        const result = [];
+        for (let i = 0; i < n; i++) {
+            result.push(model.getLanesAtLine(fromLine + i));
+        }
+        assert.deepStrictEqual(result, expected, `fromLine: ${fromLine}, n: ${n}`);
+    };
+    setup(() => {
+        model = new GlyphMarginLanesModel(10);
+    });
+    test('handles empty', () => {
+        assert.equal(model.requiredLanes, 1);
+        assertLines(1, 1, [
+            [GlyphMarginLane.Center],
+        ]);
+    });
+    test('works with a single line range', () => {
+        model.push(GlyphMarginLane.Left, lineRange(2, 3));
+        assert.equal(model.requiredLanes, 1);
+        assertLines(1, 5, [
+            [GlyphMarginLane.Center], // 1
+            [GlyphMarginLane.Left], // 2
+            [GlyphMarginLane.Left], // 3
+            [GlyphMarginLane.Center], // 4
+            [GlyphMarginLane.Center], // 5
+        ]);
+    });
+    test('persists ranges', () => {
+        model.push(GlyphMarginLane.Left, lineRange(2, 3), true);
+        assert.equal(model.requiredLanes, 1);
+        assertLines(1, 5, [
+            [GlyphMarginLane.Left], // 1
+            [GlyphMarginLane.Left], // 2
+            [GlyphMarginLane.Left], // 3
+            [GlyphMarginLane.Left], // 4
+            [GlyphMarginLane.Left], // 5
+        ]);
+    });
+    test('handles overlaps', () => {
+        model.push(GlyphMarginLane.Left, lineRange(6, 9));
+        model.push(GlyphMarginLane.Right, lineRange(5, 7));
+        model.push(GlyphMarginLane.Center, lineRange(7, 8));
+        assert.equal(model.requiredLanes, 3);
+        assertLines(5, 6, [
+            [GlyphMarginLane.Right], // 5
+            [GlyphMarginLane.Left, GlyphMarginLane.Right], // 6
+            [GlyphMarginLane.Left, GlyphMarginLane.Center, GlyphMarginLane.Right], // 7
+            [GlyphMarginLane.Left, GlyphMarginLane.Center], // 8
+            [GlyphMarginLane.Left], // 9
+            [GlyphMarginLane.Center], // 10
+        ]);
+    });
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ2x5cGhMYW5lc01vZGVsLnRlc3QuanMiLCJzb3VyY2VSb290IjoiZmlsZTovLy9ob21lL2Zyb3N0eS92c2NvZGUvc3JjLyIsInNvdXJjZXMiOlsidnMvZWRpdG9yL3Rlc3QvY29tbW9uL3ZpZXdNb2RlbC9nbHlwaExhbmVzTW9kZWwudGVzdC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRztBQUVoRyxPQUFPLE1BQU0sTUFBTSxRQUFRLENBQUM7QUFDNUIsT0FBTyxFQUFFLHVDQUF1QyxFQUFFLE1BQU0sdUNBQXVDLENBQUM7QUFDaEcsT0FBTyxFQUFFLHFCQUFxQixHQUFHLE1BQU0sOENBQThDLENBQUM7QUFDdEYsT0FBTyxFQUFFLEtBQUssRUFBRSxNQUFNLCtCQUErQixDQUFDO0FBQ3RELE9BQU8sRUFBRSxlQUFlLEVBQUUsTUFBTSwwQkFBMEIsQ0FBQztBQUUzRCxLQUFLLENBQUMsaUJBQWlCLEVBQUUsR0FBRyxFQUFFO0lBQzdCLElBQUksS0FBNEIsQ0FBQztJQUVqQyx1Q0FBdUMsRUFBRSxDQUFDO0lBRTFDLE1BQU0sU0FBUyxHQUFHLENBQUMsZUFBdUIsRUFBRSxhQUFxQixFQUFFLEVBQUUsQ0FBQyxJQUFJLEtBQUssQ0FBQyxlQUFlLEVBQUUsQ0FBQyxFQUFFLGFBQWEsRUFBRSxDQUFDLENBQUMsQ0FBQztJQUN0SCxNQUFNLFdBQVcsR0FBRyxDQUFDLFFBQWdCLEVBQUUsQ0FBUyxFQUFFLFFBQTZCLEVBQUUsRUFBRTtRQUNsRixNQUFNLE1BQU0sR0FBd0IsRUFBRSxDQUFDO1FBQ3ZDLEtBQUssSUFBSSxDQUFDLEdBQUcsQ0FBQyxFQUFFLENBQUMsR0FBRyxDQUFDLEVBQUUsQ0FBQyxFQUFFLEVBQUUsQ0FBQztZQUM1QixNQUFNLENBQUMsSUFBSSxDQUFDLEtBQUssQ0FBQyxjQUFjLENBQUMsUUFBUSxHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUM7UUFDakQsQ0FBQztRQUNELE1BQU0sQ0FBQyxlQUFlLENBQUMsTUFBTSxFQUFF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

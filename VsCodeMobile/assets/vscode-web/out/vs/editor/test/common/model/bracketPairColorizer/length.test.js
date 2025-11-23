@@ -1,0 +1,27 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import assert from 'assert';
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
+import { lengthAdd, lengthDiffNonNegative, lengthToObj, toLength } from '../../../../common/model/bracketPairsTextModelPart/bracketPairsTree/length.js';
+suite('Bracket Pair Colorizer - Length', () => {
+    ensureNoDisposablesAreLeakedInTestSuite();
+    function toStr(length) {
+        return lengthToObj(length).toString();
+    }
+    test('Basic', () => {
+        const l1 = toLength(100, 10);
+        assert.strictEqual(lengthToObj(l1).lineCount, 100);
+        assert.strictEqual(lengthToObj(l1).columnCount, 10);
+        assert.deepStrictEqual(toStr(lengthAdd(l1, toLength(100, 10))), '200,10');
+        assert.deepStrictEqual(toStr(lengthAdd(l1, toLength(0, 10))), '100,20');
+    });
+    test('lengthDiffNonNeg', () => {
+        assert.deepStrictEqual(toStr(lengthDiffNonNegative(toLength(100, 10), toLength(100, 20))), '0,10');
+        assert.deepStrictEqual(toStr(lengthDiffNonNegative(toLength(100, 10), toLength(101, 20))), '1,20');
+        assert.deepStrictEqual(toStr(lengthDiffNonNegative(toLength(101, 30), toLength(101, 20))), '0,0');
+        assert.deepStrictEqual(toStr(lengthDiffNonNegative(toLength(102, 10), toLength(101, 20))), '0,0');
+    });
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibGVuZ3RoLnRlc3QuanMiLCJzb3VyY2VSb290IjoiZmlsZTovLy9ob21lL2Zyb3N0eS92c2NvZGUvc3JjLyIsInNvdXJjZXMiOlsidnMvZWRpdG9yL3Rlc3QvY29tbW9uL21vZGVsL2JyYWNrZXRQYWlyQ29sb3JpemVyL2xlbmd0aC50ZXN0LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOzs7Z0dBR2dHO0FBRWhHLE9BQU8sTUFBTSxNQUFNLFFBQVEsQ0FBQztBQUM1QixPQUFPLEVBQUUsdUNBQXVDLEVBQUUsTUFBTSwwQ0FBMEMsQ0FBQztBQUNuRyxPQUFPLEVBQVUsU0FBUyxFQUFFLHFCQUFxQixFQUFFLFdBQVcsRUFBRSxRQUFRLEVBQUUsTUFBTSwrRUFBK0UsQ0FBQztBQUVoSyxLQUFLLENBQUMsaUNBQWlDLEVBQUUsR0FBRyxFQUFFO0lBRTdDLHVDQUF1QyxFQUFFLENBQUM7SUFFMUMsU0FBUyxLQUFLLENBQUMsTUFBYztRQUM1QixPQUFPLFdBQVcsQ0FBQyxNQUFNLENBQUMsQ0FBQyxRQUFRLEVBQUUsQ0FBQztJQUN2QyxDQUFDO0lBRUQsSUFBSSxDQUFDLE9BQU8sRUFBRSxHQUFHLEVBQUU7UUFDbEIsTUFBTSxFQUFFLEdBQUcsUUFBUSxDQUFDLEdBQUcsRUFBRSxFQUFFLENBQUMsQ0FBQztRQUM3QixNQUFNLENBQUMsV0FBVyxDQUFDLFdBQVcsQ0FBQyxFQUFFLENBQUMsQ0FBQyxTQUFTLEVBQUUsR0FBRyxDQUFDLENBQUM7UUFDbkQsTUFBTSxDQUFDLFdBQVcsQ0FBQyxXQUFXLENBQUMsRUFBRSxDQUFDLENBQUMsV0FBVyxFQUFFLEVBQUUsQ0FBQyxDQUFDO1FBRXBELE1BQU0sQ0FBQyxlQUFlLENBQUMsS0FBSyxDQUFDLFNBQVMsQ0FBQyxFQUFFLEVBQUUsUUFBUSxDQUFDLEdBQUcsRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFDLEVBQUUsUUFBUSxDQUFDLENBQUM7UUFDMUUsTUFBTSxDQUFDLGVBQWUsQ0FBQyxLQUFLLENBQUMsU0FBUyxDQUFDLEVBQUUsRUFBRSxRQUFRLENBQUMsQ0FBQyxFQUFFLEVBQUUsQ0FBQyxDQUFDLENBQUMsRUFBRSxRQUFRLENBQUMsQ0FBQztJQUN6RSxDQUFDLENBQUMsQ0FBQztJQUVILElBQUksQ0FBQyxrQkFBa0IsRUFBRSxHQUFHLEVBQUU7UUFDN0IsTUFBTSxDQUFDLGVBQWUsQ0FDckIsS0FBSyxDQUNKLHFCQUFxQixDQUNwQixRQUFRLENBQUMsR0FBRyxFQUFFLEVBQUUsQ0FBQyxFQUNqQixRQUFRLENBQUMsR0FBRyxFQUFFLEVBQUUsQ0FBQyxDQUFDLENBQ25CLEVBQ0QsTUFBTSxDQUNOLENBQUM7UUFFRixNQUFNLENBQUMsZUFBZSxDQUNyQixLQUFLLENBQ0oscUJBQXFCLENBQ3BCLFFBQVEsQ0FBQyxHQUFHLEVBQUUsRUFBRSxDQUFDLEVBQ2pCLFFBQVEsQ0FBQyxHQUFHLEVBQUUsRUFBRSxDQUFDLENBQUMsQ0FDbkIsRUFDRCxNQUFNLENBQ04sQ0FBQztRQUVGLE1BQU0sQ0FBQyxlQUFlLENBQ3JCLEtBQUssQ0FDSixxQkFBcUIsQ0FDcEIsUUFBUSxDQUFDLEdBQUcsRUFBRSxFQUFFLENBQUMsRUFDakIsUUFBUSxDQUFDLEdBQUcsRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUNuQixFQUNELEtBQUssQ0FDTCxDQUFDO1FBRUYsTUFBTSxDQUFDLGVBQWUsQ0FDckIsS0FBSyxDQUNKLHFCQUFxQixDQUNwQixRQUFRLENBQUMsR0FBRyxFQUFFLEVBQUUsQ0FBQyxFQUNqQixRQUFRLENBQUMsR0FBRyxFQUFFLEVBQUUsQ0FBQyxDQUFDLENBQ25CLEVBQ0QsS0FBSyxDQUNMLENBQUM7SUFDSCxDQUFDLENBQUMsQ0FBQztBQUNKLENBQUMsQ0FBQyxDQUFDIn0=

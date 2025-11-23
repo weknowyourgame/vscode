@@ -1,0 +1,89 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var CodeActionKeybindingResolver_1;
+import { HierarchicalKind } from '../../../../base/common/hierarchicalKind.js';
+import { Lazy } from '../../../../base/common/lazy.js';
+import { codeActionCommandId, fixAllCommandId, organizeImportsCommandId, refactorCommandId, sourceActionCommandId } from './codeAction.js';
+import { CodeActionCommandArgs, CodeActionKind } from '../common/types.js';
+import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
+let CodeActionKeybindingResolver = class CodeActionKeybindingResolver {
+    static { CodeActionKeybindingResolver_1 = this; }
+    static { this.codeActionCommands = [
+        refactorCommandId,
+        codeActionCommandId,
+        sourceActionCommandId,
+        organizeImportsCommandId,
+        fixAllCommandId
+    ]; }
+    constructor(keybindingService) {
+        this.keybindingService = keybindingService;
+    }
+    getResolver() {
+        // Lazy since we may not actually ever read the value
+        const allCodeActionBindings = new Lazy(() => this.keybindingService.getKeybindings()
+            .filter(item => CodeActionKeybindingResolver_1.codeActionCommands.indexOf(item.command) >= 0)
+            .filter(item => item.resolvedKeybinding)
+            .map((item) => {
+            // Special case these commands since they come built-in with VS Code and don't use 'commandArgs'
+            let commandArgs = item.commandArgs;
+            if (item.command === organizeImportsCommandId) {
+                commandArgs = { kind: CodeActionKind.SourceOrganizeImports.value };
+            }
+            else if (item.command === fixAllCommandId) {
+                commandArgs = { kind: CodeActionKind.SourceFixAll.value };
+            }
+            return {
+                resolvedKeybinding: item.resolvedKeybinding,
+                ...CodeActionCommandArgs.fromUser(commandArgs, {
+                    kind: HierarchicalKind.None,
+                    apply: "never" /* CodeActionAutoApply.Never */
+                })
+            };
+        }));
+        return (action) => {
+            if (action.kind) {
+                const binding = this.bestKeybindingForCodeAction(action, allCodeActionBindings.value);
+                return binding?.resolvedKeybinding;
+            }
+            return undefined;
+        };
+    }
+    bestKeybindingForCodeAction(action, candidates) {
+        if (!action.kind) {
+            return undefined;
+        }
+        const kind = new HierarchicalKind(action.kind);
+        return candidates
+            .filter(candidate => candidate.kind.contains(kind))
+            .filter(candidate => {
+            if (candidate.preferred) {
+                // If the candidate keybinding only applies to preferred actions, the this action must also be preferred
+                return action.isPreferred;
+            }
+            return true;
+        })
+            .reduceRight((currentBest, candidate) => {
+            if (!currentBest) {
+                return candidate;
+            }
+            // Select the more specific binding
+            return currentBest.kind.contains(candidate.kind) ? candidate : currentBest;
+        }, undefined);
+    }
+};
+CodeActionKeybindingResolver = CodeActionKeybindingResolver_1 = __decorate([
+    __param(0, IKeybindingService)
+], CodeActionKeybindingResolver);
+export { CodeActionKeybindingResolver };
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29kZUFjdGlvbktleWJpbmRpbmdSZXNvbHZlci5qcyIsInNvdXJjZVJvb3QiOiJmaWxlOi8vL2hvbWUvZnJvc3R5L3ZzY29kZS9zcmMvIiwic291cmNlcyI6WyJ2cy9lZGl0b3IvY29udHJpYi9jb2RlQWN0aW9uL2Jyb3dzZXIvY29kZUFjdGlvbktleWJpbmRpbmdSZXNvbHZlci50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRzs7Ozs7Ozs7Ozs7QUFFaEcsT0FBTyxFQUFFLGdCQUFnQixFQUFFLE1BQU0sNkNBQTZDLENBQUM7QUFFL0UsT0FBTyxFQUFFLElBQUksRUFBRSxNQUFNLGlDQUFpQyxDQUFDO0FBRXZELE9BQU8sRUFBRSxtQkFBbUIsRUFBRSxlQUFlLEVBQUUsd0JBQXdCLEVBQUUsaUJBQWlCLEVBQUUscUJBQXFCLEVBQUUsTUFBTSxpQkFBaUIsQ0FBQztBQUMzSSxPQUFPLEVBQXVCLHFCQUFxQixFQUFFLGNBQWMsRUFBRSxNQUFNLG9CQUFvQixDQUFDO0FBQ2hHLE9BQU8sRUFBRSxrQkFBa0IsRUFBRSxNQUFNLHNEQUFzRCxDQUFDO0FBUW5GLElBQU0sNEJBQTRCLEdBQWxDLE1BQU0sNEJBQTRCOzthQUNoQix1QkFBa0IsR0FBc0I7UUFDL0QsaUJBQWlCO1FBQ2pCLG1CQUFtQjtRQUNuQixxQkFBcUI7UUFDckIsd0JBQXdCO1FBQ3hCLGVBQWU7S0FDZixBQU55QyxDQU14QztJQUVGLFlBQ3NDLGlCQUFxQztRQUFyQyxzQkFBaUIsR0FBakIsaUJBQWlCLENBQW9CO0lBQ3ZFLENBQUM7SUFFRSxXQUFXO1FBQ2pCLHFEQUFxRDtRQUNyRCxNQUFNLHFCQUFxQixHQUFHLElBQUksSUFBSSxDQUF5QyxHQUFHLEVBQUUsQ0FBQyxJQUFJLENBQUMsaUJBQWlCLENBQUMsY0FBYyxFQUFFO2FBQzFILE1BQU0sQ0FBQyxJQUFJLENBQUMsRUFBRSxDQUFDLDhCQUE0QixDQUFDLGtCQUFrQixDQUFDLE9BQU8sQ0FBQyxJQUFJLENBQUMsT0FB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

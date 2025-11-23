@@ -1,0 +1,1 @@
+{"version":3,"sources":["completions/upstream/export.ts"],"names":[],"mappings":";;AAAA,MAAM,cAAc,GAAa;IAChC,IAAI,EAAE,QAAQ;IACd,WAAW,EAAE,kBAAkB;IAC/B,MAAM,EAAE,IAAI;IACZ,IAAI,EAAE;QACL,UAAU,EAAE,IAAI;KAChB;CACD,CAAC;AAEF,kBAAe,cAAc,CAAC","file":"export.js","sourceRoot":"../../../src/"}
