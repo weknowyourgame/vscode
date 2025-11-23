@@ -19,6 +19,41 @@ This repository ("`Code - OSS`") is where we (Microsoft) develop the [Visual Stu
 
 Visual Studio Code is updated monthly with new features and bug fixes. You can download it for Windows, macOS, and Linux on [Visual Studio Code's website](https://code.visualstudio.com/Download). To get the latest releases every day, install the [Insiders build](https://code.visualstudio.com/insiders).
 
+## VS Code Mobile
+
+This repository includes a React Native mobile application that runs VS Code Web on iOS and Android devices using native WebView components. The mobile app is located in the `VsCodeMobile/` directory.
+
+### How It Works
+
+VS Code Mobile uses a native WebView (WKWebView on iOS, WebView on Android) to render VS Code Web as a full-screen web application. The architecture works as follows:
+
+1. **Native Container**: React Native app built with Expo provides the native shell
+2. **WebView Integration**: Native WebView component loads VS Code Web HTML entry point
+3. **Asset Serving**: Metro bundler serves VS Code Web assets (JavaScript, CSS, extensions) through custom middleware
+4. **CSS Module Conversion**: Metro middleware converts CSS files to JavaScript modules when imported as ES modules, since browsers enforce strict MIME type checking
+5. **Offline Operation**: All assets are bundled locally, allowing the editor to run without network connectivity
+
+The compiled VS Code Web build artifacts are stored in `VsCodeMobile/assets/vscode-web/` and include the complete editor, built-in extensions, and all required resources.
+
+### Quick Start
+
+1. Build VS Code Web:
+   ```bash
+   npm run compile-web
+   ```
+
+2. Navigate to the mobile app directory:
+   ```bash
+   cd VsCodeMobile
+   npm install
+   npm run sync-vscode
+   npm start
+   ```
+
+3. Open the app in Expo Go on your device or use the development build.
+
+For detailed setup and development instructions, see the [VsCodeMobile README](VsCodeMobile/README.md).
+
 ## Contributing
 
 There are many ways in which you can participate in this project, for example:
